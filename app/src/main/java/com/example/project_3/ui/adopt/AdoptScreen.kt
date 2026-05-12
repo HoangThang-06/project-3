@@ -20,14 +20,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage // Import thư viện Coil
-import com.example.project_3.data.model.PetItem
-import com.example.project_3.viewmodel.AdoptViewModel
+import coil.compose.AsyncImage
 
+import com.example.project_3.data.model.Pet
+import com.example.project_3.viewmodel.PetViewModel
 @Composable
-fun AdoptScreen(adoptViewModel: AdoptViewModel = viewModel()) {
-    val petList = adoptViewModel.petList
-    val isLoading = adoptViewModel.isLoading
+fun AdoptScreen(petViewModel: PetViewModel = viewModel()) {
+
+    val petList = petViewModel.petList
+    val isLoading = petViewModel.isLoading.value
+    val errorMessage = petViewModel.errorMessage.value
+    if (errorMessage.isNotEmpty()) {
+        Text(errorMessage, color = Color.Red)
+    }
+
+    var search by remember { mutableStateOf("") }
+
+    val filteredPets = remember(search, petList) {
+        petList.filter {
+            it.name_pet.contains(search, ignoreCase = true) ||
+                    it.species.contains(search, ignoreCase = true)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -35,39 +49,52 @@ fun AdoptScreen(adoptViewModel: AdoptViewModel = viewModel()) {
             .background(Color(0xFFFBFBFB))
             .padding(horizontal = 16.dp)
     ) {
-        // --- Phần Header & Search (Giữ nguyên giao diện mẫu) ---
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Tìm kiếm bạn đồng hành", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text("Có hàng ngàn thú cưng đang chờ bạn đón về nhà.", color = Color.Gray, fontSize = 14.sp)
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Tìm kiếm bạn đồng hành", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+
+        Text(
+            "Có hàng ngàn thú cưng đang chờ bạn đón về nhà.",
+            color = Color.Gray,
+            fontSize = 14.sp
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
-            value = "", onValueChange = {},
+            value = search,
+            onValueChange = { search = it },
             placeholder = { Text("Tìm kiếm giống loài...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            leadingIcon = { Icon(Icons.Default.Search, null) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(25.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- Hiển thị danh sách từ API ---
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFF8D4000))
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
+
         } else {
+
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(petList) { pet ->
+
+                items(filteredPets) { pet ->
                     PetCardDynamic(pet)
                 }
             }
         }
     }
 }
-
 @Composable
-fun PetCardDynamic(pet: PetItem) {
+fun PetCardDynamic(pet: Pet) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -77,8 +104,8 @@ fun PetCardDynamic(pet: PetItem) {
         Row(modifier = Modifier.padding(12.dp)) {
             // Load ảnh động từ Server URL
             AsyncImage(
-                model = pet.image_url,
-                contentDescription = pet.name,
+                model = "http://10.0.2.2/project-3${pet.image}",
+                contentDescription = pet.name_pet,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(12.dp)),
@@ -89,12 +116,19 @@ fun PetCardDynamic(pet: PetItem) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(pet.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        pet.name_pet,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
                     Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.Gray)
                 }
 
-                Text(pet.desc, color = Color.Gray, fontSize = 13.sp) // breed_age
-
+                Text(
+                    "${pet.species} • ${pet.age} tuổi",
+                    color = Color.Gray,
+                    fontSize = 13.sp
+                )
                 // Tag trạng thái (ví dụ: Cần người nuôi)
                 Surface(
                     color = Color(0xFFE0F7F4),
@@ -102,8 +136,7 @@ fun PetCardDynamic(pet: PetItem) {
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = pet.tag,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        text = pet.state,                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         color = Color(0xFF00BFA5),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -111,8 +144,17 @@ fun PetCardDynamic(pet: PetItem) {
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, size = 14.dp, contentDescription = null, tint = Color.Gray)
-                    Text(pet.location, color = Color.Gray, fontSize = 12.sp)
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        pet.gender,
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }

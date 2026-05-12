@@ -1,4 +1,4 @@
-package com.example.project_3.model
+package com.example.project_3.data.model
 
 data class PetResponse(
     val success: Boolean,
