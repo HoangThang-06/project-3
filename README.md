@@ -113,8 +113,8 @@ Chạy ứng dụng trên:
 
 # 👨‍💻 Thành viên thực hiện
 
-- Trương Văn Tuyên
-- Nhóm phát triển ứng dụng cứu hộ động vật
+- Trương Văn Tuyên-24ITB225
+- Hoàng Trọng Thắng-24ITB176
 
 ---
 
