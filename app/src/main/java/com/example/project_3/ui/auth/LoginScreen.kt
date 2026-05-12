@@ -27,7 +27,8 @@ import com.example.project_3.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel(),
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onLoginSuccess: () -> Unit
 ) {
 
     var emailOrUser by remember {

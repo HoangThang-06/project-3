@@ -38,21 +38,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    // Converter GSON (Dùng để biến JSON từ PHP thành Object Kotlin)
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    // Logging Interceptor (Dùng để theo dõi log API khi debug)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    // --- Các thư viện cốt lõi ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,6 +47,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // --- Navigation (Đã có, giữ lại) ---
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // --- QUAN TRỌNG: Thư viện Icons mở rộng (Để fix lỗi đỏ ở Icons.Default.Pets, v.v.) ---
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // --- Retrofit (Dùng bản 2.11.0 mới nhất, xóa bản 2.9.0 đi) ---
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // --- Lifecycle & ViewModel ---
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+    // --- Test ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,5 +71,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

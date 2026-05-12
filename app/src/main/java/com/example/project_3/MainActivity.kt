@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
+import com.example.project_3.ui.home.HomeScreen // Đảm bảo import đúng đường dẫn HomeScreen
 import com.example.project_3.ui.theme.Project3Theme
 
 class MainActivity : ComponentActivity() {
@@ -22,38 +23,52 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Project3Theme {
-                // Khởi tạo NavController để quản lý chuyển màn hình
-                val navController = rememberNavController()
+                // Toàn bộ logic điều hướng gom vào một Composable function
+                AppNavigation()
+            }
+        }
+    }
+}
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding -> // Nhận biến padding từ Scaffold
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
 
-                    // Sử dụng NavHost để định nghĩa các màn hình trong App
-                    NavHost(
-                        navController = navController,
-                        startDestination = "login", // Màn hình mặc định là Login
-                        modifier = Modifier.padding(innerPadding) // Sử dụng innerPadding tại đây để hết lỗi
-                    ) {
-                        // Khai báo màn hình Đăng nhập
-                        composable("login") {
-                            LoginScreen(
-                                onNavigateToRegister = {
-                                    navController.navigate("register")
-                                }
-                            )
-                        }
-
-                        // Khai báo màn hình Đăng ký
-                        composable("register") {
-                            RegisterScreen(
-                                onNavigateToLogin = {
-                                    navController.navigate("login")
-                                }
-                            )
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "login",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            // 1. Màn hình Đăng nhập
+            composable("login") {
+                LoginScreen(
+                    onNavigateToRegister = {
+                        navController.navigate("register")
+                    },
+                    onLoginSuccess = {
+                        // Chuyển sang Home và xóa lịch sử login để không back lại được
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
                         }
                     }
-                }
+                )
+            }
+
+            // 2. Màn hình Đăng ký
+            composable("register") {
+                RegisterScreen(
+                    onNavigateToLogin = {
+                        navController.navigate("login")
+                    }
+                )
+            }
+
+            // 3. Màn hình Trang chủ (Mới)
+            composable("home") {
+                HomeScreen()
             }
         }
     }
