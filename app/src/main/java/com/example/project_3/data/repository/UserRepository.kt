@@ -8,5 +8,19 @@ class UserRepository {
         username: String,
         password: String
     ) =
-        RetrofitClient.api.login(username, password)
+        RetrofitClient.api.login(
+            username,
+            password
+        )
+
+    suspend fun register(
+        username: String,
+        password: String,
+        email: String
+    ) =
+        RetrofitClient.api.register(
+            username,
+            password,
+            email
+        )
 }
