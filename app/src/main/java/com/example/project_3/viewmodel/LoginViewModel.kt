@@ -44,4 +44,7 @@ class LoginViewModel : ViewModel() {
             }
         }
     }
+    fun clearMessage() {
+        message = ""
+    }
 }

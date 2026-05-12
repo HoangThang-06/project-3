@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.project_3.R
+import com.example.project_3.ui.adopt.AdoptScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,13 +84,25 @@ fun HomeScreen() {
             }
         }
     ) { innerPadding ->
+        // Sử dụng Box để bao ngoài và áp dụng innerPadding từ Scaffold
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .padding(innerPadding)
         ) {
-            Text("Trang chủ", fontSize = 24.sp, color = Color.Gray)
+            when (selectedItem) {
+                0 -> {
+                    // Màn hình Trang chủ (Bạn có thể tạo MainHomeScreen tương tự AdoptScreen)
+                    Text("Nội dung Trang chủ lấy từ API", modifier = Modifier.align(Alignment.Center))
+                }
+                1 -> {
+                    // Gọi màn hình AdoptScreen đã kết nối với ViewModel và API
+                    AdoptScreen()
+                }
+                2 -> Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
+                3 -> Text("Màn hình Mạng xã hội", modifier = Modifier.align(Alignment.Center))
+                4 -> Text("Màn hình Cá nhân", modifier = Modifier.align(Alignment.Center))
+            }
         }
     }
 }
