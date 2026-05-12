@@ -15,6 +15,10 @@ class RegisterViewModel : ViewModel() {
     var message by mutableStateOf("")
         private set
 
+    fun updateMessage(newMessage: String){
+        message = newMessage
+    }
+
     fun register(
         username: String,
         password: String,
@@ -50,7 +54,8 @@ class RegisterViewModel : ViewModel() {
 
             }catch (e: Exception){
 
-                message = e.message.toString()
+                message =
+                    e.message.toString()
             }
         }
     }
