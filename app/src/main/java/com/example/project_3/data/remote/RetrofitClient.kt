@@ -8,7 +8,7 @@ object RetrofitClient {
     private const val BASE_URL =
         "http://10.0.2.2/project-3/"
 
-    val api: ApiService by lazy {
+    private val retrofit by lazy {
 
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -16,6 +16,15 @@ object RetrofitClient {
                 GsonConverterFactory.create()
             )
             .build()
-            .create(ApiService::class.java)
+    }
+
+    // API chính
+    val api: ApiService by lazy {
+        retrofit.create(ApiService::class.java)
+    }
+
+    // Pet API
+    val petApi: PetApi by lazy {
+        retrofit.create(PetApi::class.java)
     }
 }
