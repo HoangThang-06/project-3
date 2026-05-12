@@ -26,7 +26,8 @@ import com.example.project_3.viewmodel.LoginViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    loginViewModel: LoginViewModel = viewModel()
+    loginViewModel: LoginViewModel = viewModel(),
+    onNavigateToRegister: () -> Unit
 ) {
 
     var emailOrUser by remember {
@@ -212,5 +213,31 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Dòng Đăng ký được căn giữa hoàn toàn
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center, // Căn giữa theo chiều ngang
+            verticalAlignment = Alignment.CenterVertically // Căn giữa theo chiều dọc
+        ) {
+            Text(
+                text = "Chưa có tài khoản? ",
+                color = Color.Gray,
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Đăng ký tài khoản mới",
+                color = Color(0xFF8D4000),
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier.clickable {
+                    // Gọi hàm chuyển màn hình
+                    onNavigateToRegister()
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
