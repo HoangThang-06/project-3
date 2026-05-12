@@ -1,0 +1,216 @@
+package com.example.project_3.ui.auth
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.project_3.R
+import com.example.project_3.viewmodel.LoginViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LoginScreen(
+    loginViewModel: LoginViewModel = viewModel()
+) {
+
+    var emailOrUser by remember {
+        mutableStateOf("")
+    }
+
+    var password by remember {
+        mutableStateOf("")
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+    ) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .background(Color(0xFFFDECE3)),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Image(
+                painter = painterResource(id = R.drawable.logo_paws_hearts),
+                contentDescription = "Logo",
+                modifier = Modifier.size(150.dp)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Chào mừng quay trở lại!",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF8D4000),
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = "Hãy tiếp tục hành trình tìm kiếm người bạn bốn chân của bạn.",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Email hoặc Tên đăng nhập",
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp
+            )
+
+            TextField(
+                value = emailOrUser,
+
+                onValueChange = {
+                    emailOrUser = it
+                },
+
+                placeholder = {
+                    Text("@example@gmail.com")
+                },
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFF5F5F5),
+                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Mật khẩu",
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp
+            )
+
+            TextField(
+                value = password,
+
+                onValueChange = {
+                    password = it
+                },
+
+                placeholder = {
+                    Text("••••••••")
+                },
+
+                visualTransformation =
+                    PasswordVisualTransformation(),
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFF5F5F5),
+                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+
+            Text(
+                text = "Quên mật khẩu?",
+                color = Color(0xFF00796B),
+
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable {
+
+                    },
+
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (loginViewModel.message.isNotEmpty()) {
+
+                Text(
+                    text = loginViewModel.message,
+                    color = Color.Red,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Button(
+
+                onClick = {
+
+                    loginViewModel.login(
+                        emailOrUser,
+                        password
+                    )
+                },
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+
+                shape = RoundedCornerShape(28.dp),
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF9E4900)
+                )
+
+            ) {
+
+                Text(
+                    "Đăng nhập",
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
