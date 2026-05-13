@@ -96,7 +96,6 @@ fun HomeScreen() {
                     Text("Nội dung Trang chủ lấy từ API", modifier = Modifier.align(Alignment.Center))
                 }
                 1 -> {
-                    // Gọi màn hình AdoptScreen đã kết nối với ViewModel và API
                     AdoptScreen()
                 }
                 2 -> Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
