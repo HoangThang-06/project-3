@@ -20,10 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
-import coil.compose.AsyncImage // Import thư viện Coil
-import com.example.project_3.data.model. PetItem
-import com.example.project_3.viewmodel.AdoptViewModel
+import coil.compose.AsyncImage
 
 import com.example.project_3.data.model.Pet
 import com.example.project_3.viewmodel.PetViewModel
