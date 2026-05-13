@@ -1,12 +1,12 @@
 package com.example.project_3.data.model
 
-data class PetResponse(
+data class UserResponse(
 
     val success: Boolean,
 
     val message: String? = null,
 
-    val pets: List<Pet>? = null,
+    val user: User? = null,
 
-    val data: Pet? = null
+    val users: List<User>? = null
 )

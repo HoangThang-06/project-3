@@ -5,14 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import com.example.project_3.data.model.User
 import com.example.project_3.data.repository.UserRepository
+import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
 
     private val repository = UserRepository()
 
     var message by mutableStateOf("")
+        private set
+
+    var currentUser by mutableStateOf<User?>(null)
         private set
 
     fun login(
@@ -29,6 +33,9 @@ class LoginViewModel : ViewModel() {
 
                 if (response.body()?.success == true) {
 
+                    currentUser =
+                        response.body()?.user
+
                     message = "Login Success"
 
                 } else {
@@ -44,7 +51,10 @@ class LoginViewModel : ViewModel() {
             }
         }
     }
+
     fun clearMessage() {
+
         message = ""
+
     }
 }
