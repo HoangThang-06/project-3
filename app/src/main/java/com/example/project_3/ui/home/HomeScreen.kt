@@ -12,8 +12,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel // Nhớ thêm import này
 import com.example.project_3.R
 import com.example.project_3.ui.adopt.AdoptScreen
+import com.example.project_3.ui.social.SocialScreen // Import SocialScreen của bạn
+import com.example.project_3.viewmodel.SocialViewModel // Import ViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,7 +24,9 @@ fun HomeScreen() {
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Home", "Adopt", "Report", "Social", "Profile")
 
-    // Lưu ý: Các icon này yêu cầu thư viện material-icons-extended đã thêm ở Bước 1
+    // Khởi tạo ViewModel ở đây để quản lý dữ liệu Social
+    val socialViewModel: SocialViewModel = viewModel()
+
     val icons = listOf(
         Icons.Default.Home,
         Icons.Default.Pets,
@@ -32,7 +37,7 @@ fun HomeScreen() {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar( // Dùng CenterAligned cho giống mẫu của bạn
+            CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -51,7 +56,10 @@ fun HomeScreen() {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    // Quả chuông thông báo
+                    IconButton(onClick = {
+                        // Sau này sẽ điều hướng sang màn hình NotificationScreen
+                    }) {
                         Icon(Icons.Default.NotificationsNone, contentDescription = null)
                     }
                 },
@@ -73,18 +81,9 @@ fun HomeScreen() {
                     )
                 }
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { },
-                containerColor = Color(0xFF8D4000),
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-            }
         }
+        // Lưu ý: Đã bỏ FloatingActionButton ở đây vì trong SocialScreen đã có nút "Đăng bài" riêng
     ) { innerPadding ->
-        // Sử dụng Box để bao ngoài và áp dụng innerPadding từ Scaffold
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -92,14 +91,16 @@ fun HomeScreen() {
         ) {
             when (selectedItem) {
                 0 -> {
-                    // Màn hình Trang chủ (Bạn có thể tạo MainHomeScreen tương tự AdoptScreen)
-                    Text("Nội dung Trang chủ lấy từ API", modifier = Modifier.align(Alignment.Center))
+                    Text("Nội dung Trang chủ", modifier = Modifier.align(Alignment.Center))
                 }
                 1 -> {
                     AdoptScreen()
                 }
                 2 -> Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
-                3 -> Text("Màn hình Mạng xã hội", modifier = Modifier.align(Alignment.Center))
+                3 -> {
+                    // GỌI MÀN HÌNH MẠNG XÃ HỘI Ở ĐÂY
+                    SocialScreen(socialViewModel)
+                }
                 4 -> Text("Màn hình Cá nhân", modifier = Modifier.align(Alignment.Center))
             }
         }
