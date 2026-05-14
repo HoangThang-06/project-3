@@ -205,4 +205,14 @@ interface ApiService {
         newPassword: String
 
     ): UserResponse
+    @GET("get_articles.php")
+    suspend fun getAllArticles(): com.example.project_3.data.model.ArticleResponse
+
+    // Like bài viết: Truyền userId lấy từ SessionManager.getUserId()
+    @FormUrlEncoded
+    @POST("like_article.php")
+    suspend fun likeArticle(
+        @Field("user_id") userId: Int,
+        @Field("article_id") articleId: Int
+    ): com.example.project_3.data.model.SimpleResponse
 }

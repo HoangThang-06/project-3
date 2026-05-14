@@ -17,7 +17,7 @@ import com.example.project_3.R
 import com.example.project_3.ui.adopt.AdoptScreen
 import com.example.project_3.ui.social.SocialScreen // Import SocialScreen của bạn
 import com.example.project_3.viewmodel.SocialViewModel // Import ViewModel
-
+import com.example.project_3.ui.profile.ProfileScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
@@ -98,10 +98,11 @@ fun HomeScreen() {
                 }
                 2 -> Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
                 3 -> {
-                    // GỌI MÀN HÌNH MẠNG XÃ HỘI Ở ĐÂY
                     SocialScreen(socialViewModel)
                 }
-                4 -> Text("Màn hình Cá nhân", modifier = Modifier.align(Alignment.Center))
+                4 ->{
+                    ProfileScreen()
+                }
             }
         }
     }
