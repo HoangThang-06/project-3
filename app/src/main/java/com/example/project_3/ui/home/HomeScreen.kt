@@ -12,19 +12,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel // Nhớ thêm import này
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController // Thư viện điều hướng
 import com.example.project_3.R
 import com.example.project_3.ui.adopt.AdoptScreen
-import com.example.project_3.ui.social.SocialScreen // Import SocialScreen của bạn
-import com.example.project_3.viewmodel.SocialViewModel // Import ViewModel
+import com.example.project_3.ui.social.SocialScreen
+import com.example.project_3.viewmodel.SocialViewModel
 import com.example.project_3.ui.profile.ProfileScreen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
+    // 1. Khai báo NavController để điều hướng giữa các màn hình
+    val navController = rememberNavController()
+
+    // Quản lý trạng thái tab đang chọn
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Home", "Adopt", "Report", "Social", "Profile")
 
-    // Khởi tạo ViewModel ở đây để quản lý dữ liệu Social
+    // Khởi tạo ViewModel cho Social (Mạng xã hội)
     val socialViewModel: SocialViewModel = viewModel()
 
     val icons = listOf(
@@ -56,10 +62,7 @@ fun HomeScreen() {
                     }
                 },
                 actions = {
-                    // Quả chuông thông báo
-                    IconButton(onClick = {
-                        // Sau này sẽ điều hướng sang màn hình NotificationScreen
-                    }) {
+                    IconButton(onClick = { /* Xử lý thông báo */ }) {
                         Icon(Icons.Default.NotificationsNone, contentDescription = null)
                     }
                 },
@@ -82,7 +85,6 @@ fun HomeScreen() {
                 }
             }
         }
-        // Lưu ý: Đã bỏ FloatingActionButton ở đây vì trong SocialScreen đã có nút "Đăng bài" riêng
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -91,17 +93,23 @@ fun HomeScreen() {
         ) {
             when (selectedItem) {
                 0 -> {
+                    // Bạn có thể thay thế bằng màn hình Home thật ở đây
                     Text("Nội dung Trang chủ", modifier = Modifier.align(Alignment.Center))
                 }
                 1 -> {
                     AdoptScreen()
                 }
-                2 -> Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
+                2 -> {
+                    Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
+                }
                 3 -> {
+                    // Màn hình mạng xã hội (Social)
                     SocialScreen(socialViewModel)
                 }
-                4 ->{
-                    ProfileScreen()
+                4 -> {
+                    // 2. Gọi màn hình Profile và truyền navController vào
+                    // Điều này giúp ProfileScreen có thể gọi navController.navigate("login")
+                    ProfileScreen(navController = navController)
                 }
             }
         }

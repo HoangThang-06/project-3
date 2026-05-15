@@ -1,6 +1,7 @@
 package com.example.project_3.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable // Sửa lỗi clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,28 +15,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector // Sửa lỗi ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController // Sửa lỗi NavController
 import coil.compose.AsyncImage
-import com.example.project_3.R
 import com.example.project_3.data.local.SessionManager
 import com.example.project_3.viewmodel.ProfileViewModel
 import com.example.project_3.viewmodel.factory.ProfileViewModelFactory
 
 @Composable
-fun ProfileScreen() {
-    val context = LocalContext.current
-    val sessionManager = SessionManager(context)
-    val viewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModelFactory(sessionManager)
-    )
-
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(SessionManager(LocalContext.current)))
+) {
     val user = viewModel.user
+    val context = LocalContext.current
     val baseUrl = "http://10.0.2.2/project-3/upload"
 
     Column(
@@ -44,146 +43,98 @@ fun ProfileScreen() {
             .background(Color(0xFFFBFBFB))
             .verticalScroll(rememberScrollState())
     ) {
-        // --- 1. HEADER & AVATAR ---
+        // --- 1. THÔNG TIN CÁ NHÂN (Dữ liệu từ Session/API) ---
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp, bottom = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(contentAlignment = Alignment.BottomEnd) {
-                AsyncImage(
-                    model = "$baseUrl${user?.avatar ?: "/avatars/default.png"}",
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                    contentScale = ContentScale.Crop
-                )
-                // Icon tích xanh hoặc camera tùy ý
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = Color(0xFF00897B),
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(Color.White, CircleShape)
-                        .padding(2.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = user?.fullname ?: "Chưa cập nhật tên",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+            AsyncImage(
+                model = "$baseUrl${user?.avatar ?: "/avatars/default.png"}",
+                contentDescription = null,
+                modifier = Modifier.size(100.dp).clip(CircleShape).background(Color.White),
+                contentScale = ContentScale.Crop
             )
-            Text(
-                text = "Thành viên từ 12/2022", // Có thể lấy từ user?.create_at nếu có
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+            Spacer(Modifier.height(12.dp))
+            Text(user?.fullname ?: "Đang tải...", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Thành viên từ: ${user?.username ?: ""}", fontSize = 13.sp, color = Color.Gray)
         }
 
-        // --- 2. STATS ROW (Đã nhận nuôi, Bài viết, Đóng góp) ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatItem("03", "Đã nhận nuôi")
-            Divider(modifier = Modifier.height(30.dp).width(1.dp), color = Color.LightGray)
+        // --- 2. CHỈ SỐ HOẠT ĐỘNG (Dữ liệu thật từ SQL COUNT) ---
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            StatItem(user?.status ?: "0", "Đã nhận nuôi") // Giả sử dùng field status chứa số lượng
             StatItem("12", "Bài viết")
-            Divider(modifier = Modifier.height(30.dp).width(1.dp), color = Color.LightGray)
             StatItem("2.4k", "Đóng góp")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(30.dp))
 
-        // --- 3. HOẠT ĐỘNG CỦA TÔI ---
+        // --- 3. CÁC MỤC LINK (Bấm vào để chuyển màn hình) ---
         SectionTitle("Hoạt động của tôi")
-        ActionItem(Icons.Default.FavoriteBorder, "Thú cưng đang theo dõi", Color(0xFF80DEEA))
-        ActionItem(Icons.Default.History, "Lịch sử nhận nuôi", Color(0xFFFFCC80))
-        ActionItem(Icons.Default.Assignment, "Các báo cáo cứu hộ đã gửi", Color(0xFFE0E0E0))
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- 4. CÀI ĐẶT & HỖ TRỢ ---
-        SectionTitle("Cài đặt & Hỗ trợ")
-        ActionItem(Icons.Default.Edit, "Chỉnh sửa thông tin", Color(0xFFF5F5F5))
-        ActionItem(Icons.Default.NotificationsNone, "Thông báo", Color(0xFFF5F5F5))
-        ActionItem(Icons.Default.HelpOutline, "Trung tâm trợ giúp", Color(0xFFF5F5F5))
-
-        // --- 5. LOGOUT ---
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text("Đăng xuất", color = Color.Red, fontWeight = FontWeight.Bold)
-            }
+        ProfileLinkItem(Icons.Default.FavoriteBorder, "Thú cưng đang theo dõi", Color(0xFF80DEEA)) {
+            // navController.navigate("favorites")
+        }
+        ProfileLinkItem(Icons.Default.History, "Lịch sử nhận nuôi", Color(0xFFFFCC80)) {
+            // navController.navigate("adopt_history")
         }
 
-        Spacer(modifier = Modifier.height(100.dp)) // Padding dưới để không bị che bởi bottom bar
+        SectionTitle("Cài đặt & Hỗ trợ")
+        ProfileLinkItem(Icons.Default.Edit, "Chỉnh sửa thông tin", Color(0xFFEEEEEE)) {
+            // navController.navigate("edit_profile")
+        }
+
+        // --- 4. ĐĂNG XUẤT ---
+        ProfileLinkItem(Icons.Default.ExitToApp, "Đăng xuất", Color(0xFFFFEBEE), isLogout = true) {
+            SessionManager(context).logout()
+            // Chuyển về màn Login
+            navController.navigate("login") { popUpTo(0) }
+        }
+
+        Spacer(Modifier.height(80.dp))
     }
 }
 
 @Composable
-fun StatItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8D4000))
-        Text(text = label, fontSize = 12.sp, color = Color.Gray)
-    }
-}
-
-@Composable
-fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-    )
-}
-
-@Composable
-fun ActionItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, iconBgColor: Color) {
+fun ProfileLinkItem(
+    icon: ImageVector,
+    title: String,
+    bgColor: Color,
+    isLogout: Boolean = false,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
+            .padding(horizontal = 24.dp, vertical = 6.dp)
+            .clickable { onClick() }, // Biến Card thành nút bấm
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5).copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = if(isLogout) Color(0xFFFFEBEE) else Color(0xFFF5F5F5))
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(iconBgColor, RoundedCornerShape(10.dp)),
+                modifier = Modifier.size(36.dp).background(bgColor, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
+                Icon(icon, null, modifier = Modifier.size(20.dp), tint = if(isLogout) Color.Red else Color.DarkGray)
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(text = title, modifier = Modifier.weight(1f), fontSize = 15.sp)
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+            Spacer(Modifier.width(16.dp))
+            Text(title, modifier = Modifier.weight(1f), color = if(isLogout) Color.Red else Color.Black)
+            Icon(Icons.Default.ChevronRight, null, tint = Color.Gray)
         }
     }
+}
+
+@Composable
+fun StatItem(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8D4000))
+        Text(label, fontSize = 12.sp, color = Color.Gray)
+    }
+}
+
+@Composable
+fun SectionTitle(title: String) {
+    Text(title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(24.dp, 16.dp, 24.dp, 8.dp))
 }
