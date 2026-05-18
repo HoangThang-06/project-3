@@ -76,7 +76,7 @@ app/
 Clone project:
 
 ```bash
-git clone https://github.com/your-username/project-name.git
+git clone [https://github.com/your-username/project-name.git](https://github.com/HoangThang-06/project-3.git)
 ```
 
 ## Bước 2
