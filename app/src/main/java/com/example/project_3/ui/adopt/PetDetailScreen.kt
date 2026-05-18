@@ -25,6 +25,7 @@ import coil.compose.AsyncImage // Quan trọng để hiện ảnh từ PHP
 // Nếu bạn sử dụng Icons Extended cho các icon giới tính:
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Female
+import com.example.project_3.viewmodel.PetDetailViewModel
 
 @Composable
 fun PetDetailScreen(
@@ -103,7 +104,7 @@ fun PetDetailScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Pets, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                                 Spacer(Modifier.width(4.dp))
-                                Text("${pet.breed} • ${pet.age} Tuổi", color = Color.Gray)
+                                Text("${pet.species} • ${pet.age} Tuổi", color = Color.Gray)
                             }
                         }
 

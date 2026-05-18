@@ -4,6 +4,7 @@ import com.example.project_3.data.model.LoginResponse
 import com.example.project_3.data.model.PetResponse
 import com.example.project_3.data.model.RegisterResponse
 import com.example.project_3.data.model.UserResponse
+import com.example.project_3.data.model.PetDetailResponse
 
 import retrofit2.Response
 import retrofit2.http.Field
@@ -215,4 +216,9 @@ interface ApiService {
         @Field("user_id") userId: Int,
         @Field("article_id") articleId: Int
     ): com.example.project_3.data.model.SimpleResponse
+    //chi tiet pet
+    @GET("pet/get_pet_detail.php")
+    suspend fun getPetDetail(
+        @Query("id_pet") idPet: Int
+    ): PetDetailResponse
 }

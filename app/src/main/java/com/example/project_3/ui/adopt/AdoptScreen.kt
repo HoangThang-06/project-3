@@ -1,6 +1,7 @@
 package com.example.project_3.ui.adopt
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable // THÊM IMPORT NÀY
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,16 +21,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController // THÊM IMPORT NÀY
 import coil.compose.AsyncImage
 
 import com.example.project_3.data.model.Pet
 import com.example.project_3.viewmodel.PetViewModel
-@Composable
-fun AdoptScreen(petViewModel: PetViewModel = viewModel()) {
 
+@Composable
+fun AdoptScreen(
+    navController: NavController, // 1. THÊM THAM SỐ ĐIỀU HƯỚNG VÀO ĐÂY
+    petViewModel: PetViewModel = viewModel()
+) {
     val petList = petViewModel.petList
     val isLoading = petViewModel.isLoading.value
     val errorMessage = petViewModel.errorMessage.value
+
     if (errorMessage.isNotEmpty()) {
         Text(errorMessage, color = Color.Red)
     }
@@ -49,17 +55,9 @@ fun AdoptScreen(petViewModel: PetViewModel = viewModel()) {
             .background(Color(0xFFFBFBFB))
             .padding(horizontal = 16.dp)
     ) {
-
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Tìm kiếm bạn đồng hành", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-        Text(
-            "Có hàng ngàn thú cưng đang chờ bạn đón về nhà.",
-            color = Color.Gray,
-            fontSize = 14.sp
-        )
-
+        Text("Có hàng ngàn thú cưng đang chờ bạn đón về nhà.", color = Color.Gray, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -74,37 +72,42 @@ fun AdoptScreen(petViewModel: PetViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-
         } else {
-
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
                 items(filteredPets) { pet ->
-                    PetCardDynamic(pet)
+                    // 2. TRUYỀN THÊM onClick ĐỂ ĐIỀU HƯỚNG THEO ID_PET
+                    PetCardDynamic(
+                        pet = pet,
+                        onClick = {
+                            navController.navigate("pet_detail/${pet.id_pet}")
+                        }
+                    )
                 }
             }
         }
     }
 }
+
 @Composable
-fun PetCardDynamic(pet: Pet) {
+fun PetCardDynamic(
+    pet: Pet,
+    onClick: () -> Unit // 3. THÊM THAM SỐ ONCLICK CHO CARD
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }, // 4. KHI BẤM VÀO CARD SẼ GỌI HÀM ĐIỀU HƯỚNG
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp)) {
-            // Load ảnh động từ Server URL
+            // Lưu ý: Đảm bảo đường dẫn này nối với chuỗi `/images/...` trong DB ra đúng URL ảnh trên XAMPP
             AsyncImage(
-                model = "http://10.0.2.2/project-3${pet.image}",
+                model = "http://10.0.2.2/project-3/upload${pet.image}",
                 contentDescription = pet.name_pet,
                 modifier = Modifier
                     .size(100.dp)
@@ -116,27 +119,21 @@ fun PetCardDynamic(pet: Pet) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        pet.name_pet,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
+                    Text(pet.name_pet, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.Gray)
                 }
 
-                Text(
-                    "${pet.species} • ${pet.age} tuổi",
-                    color = Color.Gray,
-                    fontSize = 13.sp
-                )
-                // Tag trạng thái (ví dụ: Cần người nuôi)
+                val loaiPet = if(pet.species == "dog") "Chó" else if(pet.species == "cat") "Mèo" else pet.species
+                Text("$loaiPet • ${pet.age} tuổi", color = Color.Gray, fontSize = 13.sp)
+
                 Surface(
                     color = Color(0xFFE0F7F4),
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = pet.state,                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        text = if(pet.state == "available") "Sẵn sàng nhận nuôi" else pet.state,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         color = Color(0xFF00BFA5),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -150,8 +147,9 @@ fun PetCardDynamic(pet: Pet) {
                         modifier = Modifier.size(14.dp),
                         tint = Color.Gray
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        pet.gender,
+                        if(pet.gender == "male") "Giống đực" else "Giống cái",
                         color = Color.Gray,
                         fontSize = 12.sp
                     )

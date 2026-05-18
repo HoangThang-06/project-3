@@ -13,21 +13,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController // Thư viện điều hướng
+import androidx.navigation.NavController // SỬA: Dùng NavController thay vì import rememberNavController
 import com.example.project_3.R
 import com.example.project_3.ui.adopt.AdoptScreen
 import com.example.project_3.ui.social.SocialScreen
 import com.example.project_3.viewmodel.SocialViewModel
 import com.example.project_3.ui.profile.ProfileScreen
-
+import androidx.compose.runtime.saveable.rememberSaveable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    // 1. Khai báo NavController để điều hướng giữa các màn hình
-    val navController = rememberNavController()
+fun HomeScreen(
+    mainNavController: NavController // 1. SỬA TẠI ĐÂY: Nhận NavController chính từ MainActivity truyền xuống
+) {
+    // XÓA dòng: val navController = rememberNavController() cũ ở đây đi
 
     // Quản lý trạng thái tab đang chọn
-    var selectedItem by remember { mutableIntStateOf(0) }
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
     val items = listOf("Home", "Adopt", "Report", "Social", "Profile")
 
     // Khởi tạo ViewModel cho Social (Mạng xã hội)
@@ -93,23 +94,21 @@ fun HomeScreen() {
         ) {
             when (selectedItem) {
                 0 -> {
-                    // Bạn có thể thay thế bằng màn hình Home thật ở đây
                     Text("Nội dung Trang chủ", modifier = Modifier.align(Alignment.Center))
                 }
                 1 -> {
-                    AdoptScreen()
+                    // 2. SỬA TẠI ĐÂY: Truyền mainNavController tổng vào AdoptScreen
+                    AdoptScreen(navController = mainNavController)
                 }
                 2 -> {
                     Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
                 }
                 3 -> {
-                    // Màn hình mạng xã hội (Social)
                     SocialScreen(socialViewModel)
                 }
                 4 -> {
-                    // 2. Gọi màn hình Profile và truyền navController vào
-                    // Điều này giúp ProfileScreen có thể gọi navController.navigate("login")
-                    ProfileScreen(navController = navController)
+                    // 3. SỬA TẠI ĐÂY: Truyền mainNavController tổng vào ProfileScreen
+                    ProfileScreen(navController = mainNavController)
                 }
             }
         }
