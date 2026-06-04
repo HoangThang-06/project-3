@@ -13,5 +13,8 @@ data class User(
     val role: String = "user",
     val email: String,
     val created_at: String? = null,
-    val status: String
+    val status: String,
+
+    val post_count: Int = 0,
+    val adopt_count: Int = 0
 )

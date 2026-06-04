@@ -221,4 +221,16 @@ interface ApiService {
     suspend fun getPetDetail(
         @Query("id_pet") idPet: Int
     ): PetDetailResponse
+
+    @FormUrlEncoded
+    @POST("user/update_profile.php")
+    suspend fun updateProfile(
+        @Field("id_user") idUser: Int,
+        @Field("fullname") fullname: String,
+        @Field("phone") phone: String,
+        @Field("birthday") birthday: String,
+        @Field("gender") gender: String,
+        @Field("address") address: String,
+        @Field("email") email: String
+    ): UserResponse
 }
