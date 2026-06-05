@@ -5,7 +5,8 @@ import com.example.project_3.data.model.PetResponse
 import com.example.project_3.data.model.RegisterResponse
 import com.example.project_3.data.model.UserResponse
 import com.example.project_3.data.model.PetDetailResponse
-
+import com.example.project_3.data.model.PostHistoryResponse
+import com.example.project_3.data.model.BaseResponse
 import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -233,4 +234,21 @@ interface ApiService {
         @Field("address") address: String,
         @Field("email") email: String
     ): UserResponse
+
+    @GET("get_adopt_history.php")
+    suspend fun getAdoptHistory(
+        @Query("id_user") idUser: Int
+    ): AdoptHistoryResponse
+
+    @GET("get_post_history.php")
+    suspend fun getPostHistory(
+        @Query("id_user") idUser: Int
+    ): PostHistoryResponse
+
+    @FormUrlEncoded
+    @POST("update_post_status.php")
+    suspend fun updatePostStatus(
+        @Field("id_article") idArticle: Int,
+        @Field("action") action: String
+    ): BaseResponse // Tạo hoặc dùng chung class chứa (val success: Boolean, val message: String)
 }

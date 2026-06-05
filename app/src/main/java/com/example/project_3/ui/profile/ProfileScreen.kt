@@ -11,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect // THÊM IMPORT NÀY
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +40,6 @@ fun ProfileScreen(
 
     val context = LocalContext.current
     val baseUrl = "http://10.0.2.2/project-3/upload"
-
-    // =========================================================================
-    // ĐOẠN SỬA ĐỔI CHÍNH: Lắng nghe sự kiện quay lại màn hình từ Navigation Stack
-    // Mỗi khi màn hình Profile hiển thị lại, lệnh này bắt ViewModel nạp lại dữ liệu
-    // =========================================================================
     LaunchedEffect(navController.currentBackStackEntry) {
         viewModel.refreshUser()
     }
@@ -106,8 +101,15 @@ fun ProfileScreen(
                 ProfileLinkItem(Icons.Default.FavoriteBorder, "Thú cưng đang theo dõi", Color(0xFF80DEEA)) {
                     // navController.navigate("favorites")
                 }
+
+                // ĐÃ MỞ RỘNG: Bấm vào đây để chuyển sang màn hình Lịch sử nhận nuôi
                 ProfileLinkItem(Icons.Default.History, "Lịch sử nhận nuôi", Color(0xFFFFCC80)) {
-                    // navController.navigate("adopt_history")
+                    navController.navigate("adopt_history")
+                }
+
+                // THÊM MỚI TẠI ĐÂY: Mục Lịch sử bài viết của tôi
+                ProfileLinkItem(Icons.Default.ListAlt, "Lịch sử bài viết", Color(0xFFC5CAE9)) {
+                    navController.navigate("post_history")
                 }
 
                 SectionTitle("Cài đặt & Hỗ trợ")

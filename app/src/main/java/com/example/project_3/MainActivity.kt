@@ -16,7 +16,9 @@ import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
 import com.example.project_3.ui.home.HomeScreen
 import com.example.project_3.ui.pet.PetDetailScreen
-import com.example.project_3.ui.profile.EditProfileScreen // THÊM IMPORT MÀN HÌNH CHỈNH SỬA THÔNG TIN TẠI ĐÂY
+import com.example.project_3.ui.profile.AdoptHistoryScreen
+import com.example.project_3.ui.profile.EditProfileScreen
+import com.example.project_3.ui.profile.PostHistoryScreen
 import com.example.project_3.ui.theme.Project3Theme
 
 class MainActivity : ComponentActivity() {
@@ -63,7 +65,7 @@ fun AppNavigation() {
             )
         }
 
-        // 3. Màn hình Trang chủ
+        // 3. Màn hình Trang chủ (Chứa BottomBar dẫn đến ProfileScreen)
         composable("home") {
             HomeScreen(mainNavController = navController)
         }
@@ -79,9 +81,19 @@ fun AppNavigation() {
             PetDetailScreen(idPet = petId, navController = navController)
         }
 
-        // 5. ĐĂNG KÝ TUYẾN ĐƯỜNG MÀN HÌNH CHỈ CHỈNH SỬA THÔNG TIN (THÊM MỚI TẠI ĐÂY)
+        // 5. Màn hình Chỉnh sửa thông tin cá nhân
         composable("edit_profile") {
             EditProfileScreen(navController = navController)
+        }
+
+        // 6. Màn hình Lịch sử nhận nuôi (Đã đổ dữ liệu động từ bảng adoptions)
+        composable("adopt_history") {
+            AdoptHistoryScreen(navController = navController)
+        }
+
+        // 7. Màn hình Lịch sử bài viết của tôi
+        composable("post_history") {
+           PostHistoryScreen(navController = navController)
         }
     }
 }
