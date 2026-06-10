@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.project_3.ui.adopt.FavoriteScreen // <-- THÊM IMPORT NÀY
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
 import com.example.project_3.ui.home.HomeScreen
@@ -86,14 +87,21 @@ fun AppNavigation() {
             EditProfileScreen(navController = navController)
         }
 
-        // 6. Màn hình Lịch sử nhận nuôi (Đã đổ dữ liệu động từ bảng adoptions)
+        // 6. Màn hình Lịch sử nhận nuôi
         composable("adopt_history") {
             AdoptHistoryScreen(navController = navController)
         }
 
         // 7. Màn hình Lịch sử bài viết của tôi
         composable("post_history") {
-           PostHistoryScreen(navController = navController)
+            PostHistoryScreen(navController = navController)
+        }
+
+        // ====================================================
+        // THÊM MỚI TẠI ĐÂY: 8. Màn hình Thú cưng đang theo dõi
+        // ====================================================
+        composable("favorite_pets") {
+            FavoriteScreen(navController = navController)
         }
     }
 }

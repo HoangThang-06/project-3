@@ -1,12 +1,14 @@
 package com.example.project_3.ui.adopt
 
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable // THÊM IMPORT NÀY
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
@@ -17,21 +19,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController // THÊM IMPORT NÀY
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
-
+import com.example.project_3.data.local.SessionManager
 import com.example.project_3.data.model.Pet
 import com.example.project_3.viewmodel.PetViewModel
 
 @Composable
 fun AdoptScreen(
-    navController: NavController, // 1. THÊM THAM SỐ ĐIỀU HƯỚNG VÀO ĐÂY
+    navController: NavController,
     petViewModel: PetViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
+    val sessionManager = remember { SessionManager(context) }
+    val currentUserId = sessionManager.getUserId()
+
+    LaunchedEffect(currentUserId) {
+        petViewModel.fetchPets(currentUserId)
+    }
+
     val petList = petViewModel.petList
     val isLoading = petViewModel.isLoading.value
     val errorMessage = petViewModel.errorMessage.value
@@ -73,16 +85,35 @@ fun AdoptScreen(
 
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Color(0xFFFD8C45))
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 items(filteredPets) { pet ->
-                    // 2. TRUYỀN THÊM onClick ĐỂ ĐIỀU HƯỚNG THEO ID_PET
                     PetCardDynamic(
                         pet = pet,
-                        onClick = {
+                        onClickCard = {
+                            // CLICK VÀO THẺ: Chỉ thực hiện chuyển màn hình chi tiết thú cưng
                             navController.navigate("pet_detail/${pet.id_pet}")
+                        },
+                        onFollowClick = {
+                            // CLICK VÀO TRÁI TIM: Xử lý bật/tắt yêu thích
+                            if (currentUserId == -1) {
+                                Toast.makeText(
+                                    context,
+                                    "Vui lòng đăng nhập để thực hiện tính năng này!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                petViewModel.followPet(currentUserId, pet.id_pet)
+
+                                // Đọc trạng thái hiện tại TRƯỚC KHI ĐỔI để đưa ra thông báo động chính xác 100%
+                                if (pet.isFollowed == 1) {
+                                    Toast.makeText(context, "Đã xóa ${pet.name_pet} khỏi danh sách theo dõi", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Đã thêm ${pet.name_pet} vào danh sách theo dõi", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
                     )
                 }
@@ -94,18 +125,18 @@ fun AdoptScreen(
 @Composable
 fun PetCardDynamic(
     pet: Pet,
-    onClick: () -> Unit // 3. THÊM THAM SỐ ONCLICK CHO CARD
+    onClickCard: () -> Unit,
+    onFollowClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }, // 4. KHI BẤM VÀO CARD SẼ GỌI HÀM ĐIỀU HƯỚNG
+            .clickable { onClickCard() }, // Đã sửa: Click vào card chỉ xem chi tiết
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp)) {
-            // Lưu ý: Đảm bảo đường dẫn này nối với chuỗi `/images/...` trong DB ra đúng URL ảnh trên XAMPP
             AsyncImage(
                 model = "http://10.0.2.2/project-3/upload${pet.image}",
                 contentDescription = pet.name_pet,
@@ -120,7 +151,18 @@ fun PetCardDynamic(
             Column(modifier = Modifier.weight(1f)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(pet.name_pet, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.Gray)
+
+                    // BIẾN ICON TIM THÀNH NÚT BẤM ĐỘC LẬP (IconButton)
+                    IconButton(
+                        onClick = { onFollowClick() },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (pet.isFollowed == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (pet.isFollowed == 1) Color.Red else Color.Gray
+                        )
+                    }
                 }
 
                 val loaiPet = if(pet.species == "dog") "Chó" else if(pet.species == "cat") "Mèo" else pet.species

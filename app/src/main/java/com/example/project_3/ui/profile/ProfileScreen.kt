@@ -99,7 +99,7 @@ fun ProfileScreen(
                 // --- 3. CÁC MỤC LINK ĐIỀU HƯỚNG ---
                 SectionTitle("Hoạt động của tôi")
                 ProfileLinkItem(Icons.Default.FavoriteBorder, "Thú cưng đang theo dõi", Color(0xFF80DEEA)) {
-                    // navController.navigate("favorites")
+                    navController.navigate("favorite_pets") // <-- Đổi tên route cho rõ nghĩa
                 }
 
                 // ĐÃ MỞ RỘNG: Bấm vào đây để chuyển sang màn hình Lịch sử nhận nuôi

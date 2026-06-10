@@ -1,16 +1,27 @@
 package com.example.project_3.data.repository
 
-import com.example.project_3.data.model.*
+import com.example.project_3.data.model.AddCommentResponse
+import com.example.project_3.data.model.ArticleResponse
+import com.example.project_3.data.model.BaseResponse
+import com.example.project_3.data.model.CommentResponse
 import com.example.project_3.data.remote.RetrofitClient
 
 class SocialRepository {
-    // Phải chỉ định rõ kiểu trả về là ArticleResponse
-    suspend fun getAllArticles(): ArticleResponse {
-        return RetrofitClient.api.getAllArticles()
+
+    // Lấy danh sách bài viết (Truyền kèm userId để check trạng thái tim đỏ/xám)
+    suspend fun getArticles(userId: Int): ArticleResponse {
+        return RetrofitClient.api.getArticles(userId)
     }
 
-    // Phải chỉ định rõ kiểu trả về là SimpleResponse
-    suspend fun likeArticle(userId: Int, articleId: Int): SimpleResponse {
-        return RetrofitClient.api.likeArticle(userId, articleId)
+    // Xử lý Thích / Bỏ thích bài viết real-time (Sử dụng BaseResponse đồng bộ với ApiService)
+    suspend fun toggleLikeArticle(userId: Int, articleId: Int): BaseResponse {
+        return RetrofitClient.api.toggleLikeArticle(userId, articleId)
+    }
+    suspend fun getComments(articleId: Int, page: Int): CommentResponse {
+        return RetrofitClient.api.getComments(articleId, page)
+    }
+    // Thêm vào trong class SocialRepository
+    suspend fun addComment(articleId: Int, userId: Int, content: String): AddCommentResponse {
+        return RetrofitClient.api.addComment(articleId, userId, content)
     }
 }
