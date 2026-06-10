@@ -43,6 +43,10 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
     val sessionManager = remember { SessionManager(context) }
     val currentUserId = sessionManager.getUserId()
 
+    // 1. QUẢN LÝ ĐIỀU HƯỚNG MÀN HÌNH BẰNG STATE
+    // "feed" tức là đang ở bảng tin công khai, "create" là đang ở màn hình soạn bài viết
+    var currentScreen by remember { mutableStateOf("feed") }
+
     // Quản lý trạng thái ẩn/hiển của Bottom Sheet
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -57,65 +61,83 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
     val articleList = socialViewModel.articleList
     val isLoading = socialViewModel.isLoading.value
 
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { /* Mở màn hình đăng bài */ },
-                modifier = Modifier.height(48.dp).widthIn(min = 120.dp),
-                containerColor = Color(0xFFFD8C45),
-                contentColor = Color.White,
-                shape = RoundedCornerShape(30.dp)
-            ) {
-                Icon(painterResource(id = R.drawable.ic_image), null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Đăng Story", fontSize = 14.sp)
-            }
-        },
-        containerColor = Color(0xFFFBFBFB)
-    ) { paddingValues ->
-        if (isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFFFD8C45))
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
-            ) {
-                items(articleList) { article ->
-                    ArticleCard(
-                        article = article,
-                        onLikeClick = {
-                            if (currentUserId == -1) {
-                                Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                socialViewModel.toggleLikeArticle(currentUserId, article.id_article)
-                            }
-                        },
-                        onCommentClick = {
-                            selectedArticleId = article.id_article
-                            socialViewModel.openCommentsForArticle(article.id_article)
-                            showBottomSheet = true
+    // 2. KHỐI LOGIC ĐIỀU KIỆN RẼ NHÁNH GIAO DIỆN
+    if (currentScreen == "create") {
+        // Nếu trạng thái là 'create', hiển thị màn hình soạn thảo bài đăng
+        CreateArticleScreen(
+            socialViewModel = socialViewModel,
+            currentUserId = currentUserId,
+            onBack = { currentScreen = "feed" } // Định nghĩa sự kiện quay lại bảng tin khi đăng xong hoặc bấm hủy
+        )
+    } else {
+        // Ngược lại, hiển thị dòng thời gian mạng xã hội thông thường
+        Scaffold(
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        // SỬA TẠI ĐÂY: Khi bấm nút sẽ chuyển trạng thái màn hình sang tạo bài viết
+                        if (currentUserId == -1) {
+                            Toast.makeText(context, "Vui lòng đăng nhập để đăng bài!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            currentScreen = "create"
                         }
-                    )
+                    },
+                    modifier = Modifier.height(48.dp).widthIn(min = 140.dp),
+                    containerColor = Color(0xFFFD8C45),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(30.dp)
+                ) {
+                    Icon(painterResource(id = R.drawable.ic_image), null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Đăng bài viết", fontSize = 14.sp) // Đổi tên text hiển thị luôn cho chuẩn
+                }
+            },
+            containerColor = Color(0xFFFBFBFB)
+        ) { paddingValues ->
+            if (isLoading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFFFD8C45))
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
+                ) {
+                    items(articleList) { article ->
+                        ArticleCard(
+                            article = article,
+                            onLikeClick = {
+                                if (currentUserId == -1) {
+                                    Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    socialViewModel.toggleLikeArticle(currentUserId, article.id_article)
+                                }
+                            },
+                            onCommentClick = {
+                                selectedArticleId = article.id_article
+                                socialViewModel.openCommentsForArticle(article.id_article)
+                                showBottomSheet = true
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        // KHỐI GIAO DIỆN BOTTOM SHEET BÌNH LUẬN TRƯỢT LÊN (ĐÃ CẬP NHẬT TRUYỀN THAM SỐ ĐỘNG)
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showBottomSheet = false },
-                sheetState = sheetState,
-                containerColor = Color.White,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                CommentSheetContent(
-                    socialViewModel = socialViewModel,
-                    currentUserId = currentUserId,
-                    articleId = selectedArticleId
-                )
+            // KHỐI GIAO DIỆN BOTTOM SHEET BÌNH LUẬN TRƯỢT LÊN
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showBottomSheet = false },
+                    sheetState = sheetState,
+                    containerColor = Color.White,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                ) {
+                    CommentSheetContent(
+                        socialViewModel = socialViewModel,
+                        currentUserId = currentUserId,
+                        articleId = selectedArticleId
+                    )
+                }
             }
         }
     }
@@ -223,7 +245,7 @@ fun ArticleCard(
     }
 }
 
-// GIAO DIỆN CHI TIẾT BÊN TRONG HỘP BÌNH LUẬN TRƯỢT (ĐÃ SỬA: CỐ ĐỊNH Ô NHẬP Ở ĐÁY)
+// GIAO DIỆN CHI TIẾT BÊN TRONG HỘP BÌNH LUẬN TRƯỢT
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentSheetContent(
@@ -241,8 +263,8 @@ fun CommentSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f) // Mở rộng 85% màn hình để chừa khoảng trống cho bàn phím ảo đẩy lên
-            .padding(bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()) // Tự động đẩy vùng nhập liệu lên khi bàn phím xuất hiện
+            .fillMaxHeight(0.85f)
+            .padding(bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding())
     ) {
         Text(
             text = "Bình luận",
@@ -252,7 +274,6 @@ fun CommentSheetContent(
         )
         HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
 
-        // 1. DANH SÁCH BÌNH LUẬN CHIẾM TRỌN DIỆN TÍCH TRÊN
         Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -263,7 +284,6 @@ fun CommentSheetContent(
                     CommentItem(comment)
                 }
 
-                // NÚT XEM THÊM
                 if (hasMore) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
@@ -292,7 +312,6 @@ fun CommentSheetContent(
 
         HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
 
-        // 2. THANH NHẬP BÌNH LUẬN DÍNH CHẶT Ở ĐÁY BOTTOM SHEET
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -317,14 +336,13 @@ fun CommentSheetContent(
 
             Spacer(Modifier.width(8.dp))
 
-            // Nút gửi bình luận (Icon Máy bay)
             IconButton(
                 onClick = {
                     if (currentUserId == -1) {
                         Toast.makeText(context, "Vui lòng đăng nhập để bình luận!", Toast.LENGTH_SHORT).show()
                     } else {
                         socialViewModel.sendComment(currentUserId, articleId, typedCommentText) {
-                            typedCommentText = "" // Gửi thành công -> Xóa chữ trong ô input công việc lập tức
+                            typedCommentText = ""
                         }
                     }
                 },

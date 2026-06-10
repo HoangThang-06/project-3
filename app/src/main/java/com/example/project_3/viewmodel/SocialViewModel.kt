@@ -8,7 +8,9 @@ import com.example.project_3.data.model.Article
 import com.example.project_3.data.model.Comment
 import com.example.project_3.data.repository.SocialRepository
 import kotlinx.coroutines.launch
-
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class SocialViewModel : ViewModel() {
 
@@ -32,6 +34,9 @@ class SocialViewModel : ViewModel() {
 
     private var currentCommentPage = 1
     private var currentTargetArticleId = -1
+
+    var isPublishing = mutableStateOf(false)
+        private set
 
     // ============================================
     // LOAD ARTICLES QUA REPOSITORY
@@ -122,7 +127,7 @@ class SocialViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // SỬA TẠI ĐÂY: Gọi qua repository riêng của bạn thay vì RetrofitClient trực tiếp
+                // Gọi qua repository riêng của bạn thay vì RetrofitClient trực tiếp
                 val response = repository.addComment(articleId, userId, content)
 
                 if (response.success) {
@@ -140,6 +145,55 @@ class SocialViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    // ============================================
+    // UPLOAD ARTICLE QUA REPOSITORY (Đã sửa lỗi gạch đỏ)
+    // ============================================
+    fun uploadArticle(
+        userId: Int,
+        content: String,
+        category: String,
+        imageBytes: ByteArray?, // Mảng bytes của ảnh lấy từ Uri của thư viện Android
+        imageFileName: String?,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        if (content.trim().isEmpty()) {
+            onFailure("Nội dung bài viết không được để trống")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                isPublishing.value = true
+
+                // Đã sửa đổi sang Extension Functions `.toRequestBody` và `.toMediaTypeOrNull()`
+                val userIdBody = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                val contentBody = content.toRequestBody("text/plain".toMediaTypeOrNull())
+                val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                // Xử lý chuyển đổi mảng byte của ảnh sang MultipartBody.Part
+                var imagePart: MultipartBody.Part? = null
+                if (imageBytes != null && imageFileName != null) {
+                    val requestFile = imageBytes.toRequestBody("image/*".toMediaTypeOrNull())
+                    imagePart = MultipartBody.Part.createFormData("image", imageFileName, requestFile)
+                }
+
+                val response = repository.addArticle(userIdBody, contentBody, categoryBody, imagePart)
+                if (response.success) {
+                    loadArticles(userId) // Tải lại danh sách bài viết mới lập tức ở màn hình chính
+                    onSuccess()
+                } else {
+                    onFailure(response.message ?: "Đăng bài thất bại, vui lòng thử lại!")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onFailure("Lỗi kết nối mạng: ${e.message}")
+            } finally {
+                isPublishing.value = false
             }
         }
     }
