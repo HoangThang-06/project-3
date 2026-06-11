@@ -226,4 +226,16 @@ interface ApiService {
         @Part("category") category: RequestBody,
         @Part image: MultipartBody.Part?
     ): BaseResponse
+
+    @Multipart
+    @POST("add_report.php")
+    suspend fun addReport(
+        @Part("user_id") userId: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("status") status: RequestBody,
+        @Part("latitude") latitude: RequestBody,
+        @Part("longitude") longitude: RequestBody,
+        @Part("address") address: RequestBody,
+        @Part image: MultipartBody.Part?
+    ): BaseResponse
 }
