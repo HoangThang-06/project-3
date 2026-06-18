@@ -20,6 +20,8 @@ import com.example.project_3.ui.social.SocialScreen
 import com.example.project_3.viewmodel.SocialViewModel
 import com.example.project_3.ui.profile.ProfileScreen
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.project_3.ui.report.ReportScreen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -101,7 +103,11 @@ fun HomeScreen(
                     AdoptScreen(navController = mainNavController)
                 }
                 2 -> {
-                    Text("Màn hình Báo cáo", modifier = Modifier.align(Alignment.Center))
+                    // ĐÃ SỬA: Thay thế Text cứng bằng Màn hình Báo Cáo Thú Cưng thực tế
+                    ReportScreen(
+                        onReportSuccess = {
+                        }
+                    )
                 }
                 3 -> {
                     SocialScreen(socialViewModel)

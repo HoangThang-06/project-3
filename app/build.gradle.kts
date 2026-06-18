@@ -47,6 +47,12 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // Thư viện Google Maps dành riêng cho Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+// Thư viện bổ sung của Google Play Services Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 
     // --- Navigation (Đã có, giữ lại) ---
     implementation("androidx.navigation:navigation-compose:2.7.7")
