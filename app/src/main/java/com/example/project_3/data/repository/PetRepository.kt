@@ -63,13 +63,13 @@ class PetRepository {
     // UPDATE PET
     // =========================
     suspend fun updatePet(
-        idPet: String,
+        idPet: Int, // Đổi từ String sang Int để khớp với Model Pet
         namePet: String,
         gender: String,
         description: String,
         state: String,
         image: String,
-        age: String,
+        age: Int,
         species: String
     ): PetResponse {
         return RetrofitClient.api.updatePet(
@@ -84,5 +84,17 @@ class PetRepository {
         idPet: String
     ): PetResponse {
         return RetrofitClient.api.deletePet(idPet)
+    }
+
+    suspend fun getAllAdoptionRequests(): com.example.project_3.data.model.AdoptionResponse {
+        return RetrofitClient.api.getAllRequests()
+    }
+
+    suspend fun updateAdoptionRequestState(id: Int, state: String): com.example.project_3.data.model.CommonResponse {
+        return RetrofitClient.api.updateRequestState(id, state)
+    }
+
+    suspend fun approveAdoptionRequest(id: Int): com.example.project_3.data.model.CommonResponse {
+        return RetrofitClient.api.approveRequest(id)
     }
 }

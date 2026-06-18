@@ -97,13 +97,13 @@ class PetViewModel : ViewModel() {
     // UPDATE PET
     // =========================
     fun updatePet(
-        idPet: String,
+        idPet: Int,
         namePet: String,
         gender: String,
         description: String,
         state: String,
         image: String,
-        age: String,
+        age: Int,
         species: String
     ) {
         viewModelScope.launch {

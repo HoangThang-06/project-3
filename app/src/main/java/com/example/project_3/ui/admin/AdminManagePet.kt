@@ -3,6 +3,7 @@ package com.example.project_3.ui.admin
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -29,10 +30,8 @@ import coil.compose.SubcomposeAsyncImage
 import com.example.project_3.data.model.Pet
 import com.example.project_3.viewmodel.AdminManagePetViewModel
 
-// ĐỊNH NGHĨA BASE URL TRỎ THẲNG VÀO THƯ MỤC THÀNH PHẦN PROJECT-3
-// Hãy thay "192.168.1.15" thành địa chỉ IPv4 thực tế trên máy tính của bạn
-const val BASE_SERVER_URL = "http://192.168.110.227/project-3/"
 
+const val BASE_SERVER_URL = "http://10.0.2.2/project-3/"
 val BackgroundColor = Color(0xFFFDF8F5)
 val PrimaryColor = Color(0xFFE28754)
 val PrimaryFixed = Color(0xFFFFDBC9)
@@ -55,7 +54,6 @@ fun AdminManagePet(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatusFilter by remember { mutableStateOf("All") }
-    var selectedPetForManage by remember { mutableStateOf<Pet?>(null) }
 
     Scaffold(
         containerColor = BackgroundColor,
@@ -189,33 +187,32 @@ fun AdminManagePet(
                         }
                     }
                 } else {
+                    // ĐÃ CẬP NHẬT: Nhấn vào item hoặc nút quản lý đều kích hoạt lưu dữ liệu và chuyển vùng điều hướng
                     items(petList) { pet ->
-                        PetRowCard(pet = pet, onManageClick = { selectedPetForManage = pet })
+                        PetRowCard(
+                            pet = pet,
+                            onPetClick = {
+                                viewModel.selectPet(pet)
+                                navController.navigate("admin_pet_detail")
+                            },
+                            onManageClick = {
+                                viewModel.selectPet(pet)
+                                navController.navigate("admin_pet_detail")
+                            }
+                        )
                     }
                 }
             }
         }
     }
-
-    selectedPetForManage?.let { pet ->
-        ManagePetStatusDialog(
-            pet = pet,
-            onDismiss = { selectedPetForManage = null },
-            onUpdateStatus = { newState ->
-                viewModel.updatePetState(pet, newState)
-                selectedPetForManage = null
-            },
-            onDelete = {
-                viewModel.deletePet(pet.id_pet.toString())
-                selectedPetForManage = null
-            }
-        )
-    }
 }
 
 @Composable
-fun PetRowCard(pet: Pet, onManageClick: () -> Unit) {
-    // Kỹ thuật ghép chuỗi tự động nhận diện tiền tố của cơ sở dữ liệu
+fun PetRowCard(
+    pet: Pet,
+    onPetClick: () -> Unit,
+    onManageClick: () -> Unit
+) {
     val fullImageUrl = if (pet.image.startsWith("images/")) {
         "${BASE_SERVER_URL}${pet.image}"
     } else {
@@ -223,7 +220,11 @@ fun PetRowCard(pet: Pet, onManageClick: () -> Unit) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().background(SurfaceContainerLowest, RoundedCornerShape(16.dp)).padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SurfaceContainerLowest, RoundedCornerShape(16.dp))
+            .clickable { onPetClick() } // GIẢI PHÁP: Giúp toàn bộ vùng hàng ngang này nhận diện sự kiện click
+            .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(
@@ -288,43 +289,4 @@ fun PetRowCard(pet: Pet, onManageClick: () -> Unit) {
             }
         }
     }
-}
-
-@Composable
-fun ManagePetStatusDialog(pet: Pet, onDismiss: () -> Unit, onUpdateStatus: (String) -> Unit, onDelete: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Cập nhật: ${pet.name_pet}", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Thay đổi trạng thái cư trú của thú cưng:", color = OnSurfaceVariant)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("available", "reserved", "adopted").forEach { state ->
-                        Button(
-                            onClick = { onUpdateStatus(state) },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (pet.state.lowercase() == state) PrimaryColor else SurfaceContainerHigh
-                            ),
-                            contentPadding = PaddingValues(4.dp)
-                        ) {
-                            Text(state.uppercase(), fontSize = 10.sp, color = if (pet.state.lowercase() == state) Color.White else OnSurface)
-                        }
-                    }
-                }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Button(
-                    onClick = onDelete,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("XÓA THÚ CƯNG KHỎI HỆ THỐNG", color = Color.White)
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Đóng", color = Color.Gray) } }
-    )
 }

@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project_3.ui.adopt.FavoriteScreen
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
@@ -22,6 +23,8 @@ import com.example.project_3.ui.profile.EditProfileScreen
 import com.example.project_3.ui.profile.PostHistoryScreen
 import com.example.project_3.ui.theme.Project3Theme
 import com.example.project_3.ui.admin.*
+import com.example.project_3.viewmodel.AdminManagePetViewModel
+import com.example.project_3.viewmodel.AdminManageArticleViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +42,10 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
 
+    // Khởi tạo các ViewModel dùng chung ở tầng Navigation để chia sẻ dữ liệu
+    val adminManagePetViewModel: AdminManagePetViewModel = viewModel()
+    val adminManageArticleViewModel: AdminManageArticleViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = "login",
@@ -52,16 +59,12 @@ fun AppNavigation() {
                 },
                 onAdminLoginSuccess = {
                     navController.navigate("admin_home") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
+                        popUpTo("login") { inclusive = true }
                     }
                 },
                 onUserLoginSuccess = {
                     navController.navigate("home") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
+                        popUpTo("login") { inclusive = true }
                     }
                 }
             )
@@ -85,35 +88,73 @@ fun AppNavigation() {
         // HỆ THỐNG ROUTE DÀNH CHO ADMIN
         // ====================================================
 
-        // Màn hình chính Dashboard của Admin (Route ứng với "admin_home")
+        // Màn hình chính Dashboard của Admin
         composable("admin_home") {
             AdminDashboard(navController = navController)
         }
 
-        // Màn hình quản lý thú cưng (Route ứng với "admin_manage_pet")
+        // Màn hình quản lý thú cưng
         composable("admin_manage_pet") {
-            AdminManagePet(navController = navController)
+            AdminManagePet(navController, adminManagePetViewModel)
         }
 
-        // SỬA ĐỔI TẠI ĐÂY: Thêm điểm đến chính xác cho mục Duyệt Đơn
-        composable("admin_adopt") {
-            AdminAdopt(navController = navController)
-        }
-
-        // Màn hình quản lý bài đăng mạng xã hội (Route ứng với "admin_social")
-        composable("admin_social") {
-            AdminSocial(navController = navController)
+        // Màn hình quản lý chi tiết thú cưng (Sửa/Xóa)
+        composable("admin_pet_detail") {
+            val selectedPet = adminManagePetViewModel.selectedPet
+            if (selectedPet != null) {
+                AdminPetDetailScreen(
+                    pet = selectedPet,
+                    navController = navController,
+                    viewModel = adminManagePetViewModel
+                )
+            }
         }
 
         composable("admin_add_pet") {
             AdminAddPet(navController = navController)
         }
 
+        // Màn hình duyệt đơn nhận nuôi
+        composable("admin_adopt") {
+            AdminAdopt(navController = navController)
+        }
+
+        // --- CẬP NHẬT ROUTE CỘNG ĐỒNG SOCIAL CHO ADMIN ---
+        composable("admin_social") {
+            AdminSocial(
+                navController = navController,
+                viewModel = adminManageArticleViewModel,
+                onEditArticleClick = { article ->
+                    // ĐÃ SỬA: Khi click sửa bài viết, thực hiện chuyển màn hình chi tiết bài viết
+                    navController.navigate("admin_article_detail")
+                },
+                onAddArticleClick = {
+                    // ĐÃ SỬA: Điều hướng đến màn hình thêm bài viết (nếu bạn có route này)
+                    navController.navigate("admin_add_article")
+                }
+            )
+        }
+
+        // Màn hình sửa đổi thông tin chi tiết bài viết/bài báo của Admin
+        composable("admin_article_detail") {
+            val currentArticle = adminManageArticleViewModel.selectedArticle
+
+            if (currentArticle != null) {
+                AdminArticleDetailScreen(
+                    article = currentArticle,
+                    navController = navController,
+                    viewModel = adminManageArticleViewModel
+                )
+            } else {
+                navController.popBackStack()
+            }
+        }
+
         // ====================================================
-        // CÁC MÀN HÌNH CHỨC NĂNG KHÁC
+        // CÁC MÀN HÌNH CHỨC NĂNG KHÁC CỦA USER
         // ====================================================
 
-        // 4. Màn hình Chi tiết Thú cưng
+        // Màn hình Chi tiết Thú cưng (Giao diện phía User xem)
         composable(
             route = "pet_detail/{petId}",
             arguments = listOf(
@@ -124,22 +165,22 @@ fun AppNavigation() {
             PetDetailScreen(idPet = petId, navController = navController)
         }
 
-        // 5. Màn hình Chỉnh sửa thông tin cá nhân
+        // Màn hình Chỉnh sửa thông tin cá nhân
         composable("edit_profile") {
             EditProfileScreen(navController = navController)
         }
 
-        // 6. Màn hình Lịch sử nhận nuôi
+        // Màn hình Lịch sử nhận nuôi
         composable("adopt_history") {
             AdoptHistoryScreen(navController = navController)
         }
 
-        // 7. Màn hình Lịch sử bài viết của tôi
+        // Màn hình Lịch sử bài viết cá nhân
         composable("post_history") {
             PostHistoryScreen(navController = navController)
         }
 
-        // 8. Màn hình Thú cưng đang theo dõi
+        // Màn hình Thú cưng đang theo dõi
         composable("favorite_pets") {
             FavoriteScreen(navController = navController)
         }
