@@ -70,16 +70,16 @@ interface ApiService {
         @Query("id_pet") idPet: Int
     ): PetDetailResponse
 
-    @FormUrlEncoded
-    @POST("pet/add_pet.php")
+    @Multipart
+    @POST("pet/add_pet.php") // Nhớ chỉnh sửa lại endpoint cho đúng với cấu trúc server của bạn
     suspend fun addPet(
-        @Field("name_pet") namePet: String,
-        @Field("gender") gender: String,
-        @Field("description") description: String,
-        @Field("state") state: String,
-        @Field("image") image: String,
-        @Field("age") age: String,
-        @Field("species") species: String
+        @Part("name_pet") namePet: RequestBody,
+        @Part("gender") gender: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("state") state: RequestBody,
+        @Part image: MultipartBody.Part?, // Đối với file nhị phân của ảnh
+        @Part("age") age: RequestBody,
+        @Part("species") species: RequestBody
     ): PetResponse
 
     @FormUrlEncoded

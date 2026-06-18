@@ -12,7 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.project_3.ui.adopt.FavoriteScreen // <-- THÊM IMPORT NÀY
+import com.example.project_3.ui.adopt.FavoriteScreen
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
 import com.example.project_3.ui.home.HomeScreen
@@ -21,6 +21,7 @@ import com.example.project_3.ui.profile.AdoptHistoryScreen
 import com.example.project_3.ui.profile.EditProfileScreen
 import com.example.project_3.ui.profile.PostHistoryScreen
 import com.example.project_3.ui.theme.Project3Theme
+import com.example.project_3.ui.admin.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +50,18 @@ fun AppNavigation() {
                 onNavigateToRegister = {
                     navController.navigate("register")
                 },
-                onLoginSuccess = {
+                onAdminLoginSuccess = {
+                    navController.navigate("admin_home") {
+                        popUpTo("login") {
+                            inclusive = true
+                        }
+                    }
+                },
+                onUserLoginSuccess = {
                     navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                        popUpTo("login") {
+                            inclusive = true
+                        }
                     }
                 }
             )
@@ -66,10 +76,42 @@ fun AppNavigation() {
             )
         }
 
-        // 3. Màn hình Trang chủ (Chứa BottomBar dẫn đến ProfileScreen)
+        // 3. Màn hình Trang chủ User
         composable("home") {
             HomeScreen(mainNavController = navController)
         }
+
+        // ====================================================
+        // HỆ THỐNG ROUTE DÀNH CHO ADMIN
+        // ====================================================
+
+        // Màn hình chính Dashboard của Admin (Route ứng với "admin_home")
+        composable("admin_home") {
+            AdminDashboard(navController = navController)
+        }
+
+        // Màn hình quản lý thú cưng (Route ứng với "admin_manage_pet")
+        composable("admin_manage_pet") {
+            AdminManagePet(navController = navController)
+        }
+
+        // SỬA ĐỔI TẠI ĐÂY: Thêm điểm đến chính xác cho mục Duyệt Đơn
+        composable("admin_adopt") {
+            AdminAdopt(navController = navController)
+        }
+
+        // Màn hình quản lý bài đăng mạng xã hội (Route ứng với "admin_social")
+        composable("admin_social") {
+            AdminSocial(navController = navController)
+        }
+
+        composable("admin_add_pet") {
+            AdminAddPet(navController = navController)
+        }
+
+        // ====================================================
+        // CÁC MÀN HÌNH CHỨC NĂNG KHÁC
+        // ====================================================
 
         // 4. Màn hình Chi tiết Thú cưng
         composable(
@@ -97,9 +139,7 @@ fun AppNavigation() {
             PostHistoryScreen(navController = navController)
         }
 
-        // ====================================================
-        // THÊM MỚI TẠI ĐÂY: 8. Màn hình Thú cưng đang theo dõi
-        // ====================================================
+        // 8. Màn hình Thú cưng đang theo dõi
         composable("favorite_pets") {
             FavoriteScreen(navController = navController)
         }

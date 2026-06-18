@@ -93,35 +93,6 @@ class PetViewModel : ViewModel() {
             }
         }
     }
-
-    // =========================
-    // ADD PET
-    // =========================
-    fun addPet(
-        namePet: String,
-        gender: String,
-        description: String,
-        state: String,
-        image: String,
-        age: String,
-        species: String
-    ) {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.api.addPet(
-                    namePet, gender, description, state, image, age, species
-                )
-                message.value = response.message ?: ""
-
-                if (response.success) {
-                    fetchPets() // Tự động dùng lại currentSavedUserId đã lưu
-                }
-            } catch (e: Exception) {
-                message.value = e.message ?: "Add failed"
-            }
-        }
-    }
-
     // =========================
     // UPDATE PET
     // =========================
