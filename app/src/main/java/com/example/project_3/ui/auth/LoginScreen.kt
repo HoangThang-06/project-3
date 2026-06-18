@@ -31,18 +31,13 @@ import com.example.project_3.viewmodel.LoginViewModel
 fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel(),
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onAdminLoginSuccess: () -> Unit,
+    onUserLoginSuccess: () -> Unit
 ) {
-
-    // =========================
     // INPUT STATE
-    // =========================
     var emailOrUser by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
-    // =========================
     // SESSION
-    // =========================
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
@@ -50,14 +45,25 @@ fun LoginScreen(
     // LOGIN SUCCESS (SỬA TẠI ĐÂY)
     // =========================
     LaunchedEffect(loginViewModel.currentUser) {
+
         loginViewModel.currentUser?.let { user ->
 
-            // THAY THẾ: Thay vì chỉ saveUserId, ta lưu toàn bộ Object User bao gồm cả email, fullname, vv.
-            // Hàm này sẽ tự động lưu cả "user_json" và "user_id" theo cấu trúc mới của SessionManager
             sessionManager.saveUser(user)
 
-            // Chuyển màn hình sang trang chủ
-            onLoginSuccess()
+            when (user.role.lowercase()) {
+
+                "admin" -> {
+                    onAdminLoginSuccess()
+                }
+
+                "user" -> {
+                    onUserLoginSuccess()
+                }
+
+                else -> {
+                    loginViewModel.clearMessage()
+                }
+            }
         }
     }
 

@@ -2,6 +2,10 @@ package com.example.project_3.data.repository
 
 import com.example.project_3.data.model.PetResponse
 import com.example.project_3.data.remote.RetrofitClient
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class PetRepository {
 
@@ -33,12 +37,25 @@ class PetRepository {
         gender: String,
         description: String,
         state: String,
-        image: String,
+        imagePart: MultipartBody.Part?, // Nhận từ ViewModel gửi xuống
         age: String,
         species: String
     ): PetResponse {
+
+        // Hàm phụ trợ chuyển chuỗi thông thường thành RequestBody dạng Form-Data text
+        fun createPartFromString(string: String): RequestBody {
+            return string.toRequestBody("text/plain".toMediaTypeOrNull())
+        }
+
+        // Gọi sang ApiService đã sửa ở Bước 1
         return RetrofitClient.api.addPet(
-            namePet, gender, description, state, image, age, species
+            namePet = createPartFromString(namePet),
+            gender = createPartFromString(gender),
+            description = createPartFromString(description),
+            state = createPartFromString(state),
+            image = imagePart,
+            age = createPartFromString(age),
+            species = createPartFromString(species)
         )
     }
 

@@ -19,11 +19,13 @@ class LoginViewModel : ViewModel() {
     var currentUser by mutableStateOf<User?>(null)
         private set
 
+    var navigateTo by mutableStateOf("")
+        private set
+
     fun login(
         username: String,
         password: String
     ) {
-
         viewModelScope.launch {
 
             try {
@@ -33,10 +35,16 @@ class LoginViewModel : ViewModel() {
 
                 if (response.body()?.success == true) {
 
-                    currentUser =
-                        response.body()?.user
+                    val user = response.body()?.user
+
+                    currentUser = user
 
                     message = "Login Success"
+
+                    when(user?.role) {
+                        "admin" -> navigateTo = "admin"
+                        "user" -> navigateTo = "user"
+                    }
 
                 } else {
 
@@ -52,9 +60,10 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    fun clearNavigation() {
+        navigateTo = ""
+    }
     fun clearMessage() {
-
         message = ""
-
     }
 }

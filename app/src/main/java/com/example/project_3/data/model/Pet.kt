@@ -1,4 +1,5 @@
 package com.example.project_3.data.model
+import androidx.compose.ui.graphics.Color
 
 import com.google.gson.annotations.SerializedName
 
