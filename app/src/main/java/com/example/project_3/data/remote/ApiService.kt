@@ -1,6 +1,8 @@
 package com.example.project_3.data.remote
 
 import com.example.project_3.data.model.AddCommentResponse
+import com.example.project_3.data.model.AdoptionRequest
+import com.example.project_3.data.model.AdoptionResponse
 import com.example.project_3.data.model.ArticleResponse
 import com.example.project_3.data.model.LoginResponse
 import com.example.project_3.data.model.PetResponse
@@ -10,10 +12,12 @@ import com.example.project_3.data.model.PetDetailResponse
 import com.example.project_3.data.model.PostHistoryResponse
 import com.example.project_3.data.model.BaseResponse
 import com.example.project_3.data.model.CommentResponse
+import com.example.project_3.data.model.HomeResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 //import com.example.project_3.data.model.AdoptHistoryResponse
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -238,4 +242,17 @@ interface ApiService {
         @Part("address") address: RequestBody,
         @Part image: MultipartBody.Part?
     ): BaseResponse
+
+    @GET("get_home_data.php")
+    suspend fun getHomeData(): HomeResponse
+
+    @GET("get_notifications.php")
+    suspend fun getNotifications(
+        @Query("user_id") userId: Int
+    ): com.example.project_3.data.model.NotificationResponse
+
+    @POST("insert_adoption.php")
+    suspend fun registerAdoption(
+        @Body request: AdoptionRequest
+    ): AdoptionResponse
 }

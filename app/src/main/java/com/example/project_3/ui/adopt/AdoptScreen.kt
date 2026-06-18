@@ -138,7 +138,7 @@ fun PetCardDynamic(
     ) {
         Row(modifier = Modifier.padding(12.dp)) {
             AsyncImage(
-                model = "http://10.0.2.2/project-3/upload${pet.image}",
+                model = "http://10.0.2.2/project-3${pet.image}",
                 contentDescription = pet.name_pet,
                 modifier = Modifier
                     .size(100.dp)

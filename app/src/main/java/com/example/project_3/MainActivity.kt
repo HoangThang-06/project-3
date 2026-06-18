@@ -16,7 +16,7 @@ import com.example.project_3.ui.adopt.FavoriteScreen // <-- THÊM IMPORT NÀY
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
 import com.example.project_3.ui.home.HomeScreen
-import com.example.project_3.ui.pet.PetDetailScreen
+import com.example.project_3.ui.adopt.PetDetailScreen
 import com.example.project_3.ui.profile.AdoptHistoryScreen
 import com.example.project_3.ui.profile.EditProfileScreen
 import com.example.project_3.ui.profile.PostHistoryScreen

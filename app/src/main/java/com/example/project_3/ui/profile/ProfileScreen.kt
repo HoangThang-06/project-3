@@ -39,7 +39,7 @@ fun ProfileScreen(
     val isLoading = viewModel.isLoading
 
     val context = LocalContext.current
-    val baseUrl = "http://10.0.2.2/project-3/upload"
+    val baseUrl = "http://10.0.2.2/project-3/uploads"
     LaunchedEffect(navController.currentBackStackEntry) {
         viewModel.refreshUser()
     }
