@@ -39,6 +39,7 @@ private object AdoptColors {
     val OnSecondaryContainer = Color(0xFF006F69)
     val OutlineVariant = Color(0xFFDDC1B3).copy(alpha = 0.3f)
     val ErrorColor = Color(0xFFBA1A1A)
+    val SuccessColor = Color(0xFF2B6B2C)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,7 +63,7 @@ fun AdminAdopt(
                     )
                 },
                 actions = {
-                    IconButton(onClick = { /* Xử lý thông báo */ }) {
+                    IconButton(onClick = { /* Xử lý thông báo nếu cần */ }) {
                         Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = AdoptColors.OnSurfaceVariant)
                     }
                     Box(modifier = Modifier.padding(end = 16.dp).size(32.dp).clip(CircleShape).background(Color.LightGray)) {
@@ -108,7 +109,8 @@ fun AdminAdopt(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.loadAdoptApplications() }, // Dùng nút này làm tính năng làm mới (Refresh) danh sách nhanh
+                // CẬP NHẬT: Đổi từ loadAdoptApplications() sang hàm fetchAdoptionRequests() chuẩn
+                onClick = { viewModel.fetchAdoptionRequests() },
                 containerColor = AdoptColors.OrangePrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
@@ -127,10 +129,11 @@ fun AdminAdopt(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = uiState.searchText,
                     onValueChange = { viewModel.onSearchTextChanged(it) },
-                    placeholder = { Text("Tìm kiếm thú cưng, giống loài...", fontSize = 14.sp) },
+                    placeholder = { Text("Tìm kiếm người đăng ký, thú cưng...", fontSize = 14.sp) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = Color(0xFF897266)) },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = CircleShape,
@@ -145,7 +148,7 @@ fun AdminAdopt(
 
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "ĐANG CHỜ DUYỆT (${uiState.applications.size})", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1C1C))
+                    Text(text = "DANH SÁCH YÊU CẦU (${uiState.applications.size})", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1C1C))
                     TextButton(onClick = { }, contentPadding = PaddingValues(0.dp)) {
                         Text("Sắp xếp ", color = AdoptColors.OrangePrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Icon(Icons.Default.Sort, contentDescription = "Sort", tint = AdoptColors.OrangePrimary, modifier = Modifier.size(14.dp))
@@ -168,7 +171,8 @@ fun AdminAdopt(
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = uiState.errorMessage!!, color = AdoptColors.ErrorColor, fontSize = 14.sp, textAlign = TextAlign.Center)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadAdoptApplications() }, colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary)) {
+                        // CẬP NHẬT: Sửa hàm tải lại dữ liệu thích hợp
+                        Button(onClick = { viewModel.fetchAdoptionRequests() }, colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary)) {
                             Text("Thử tải lại dữ liệu")
                         }
                     }
@@ -178,34 +182,54 @@ fun AdminAdopt(
             // ĐỔ DANH SÁCH DỮ LIỆU THẬT
             items(uiState.applications, key = { it.id }) { application ->
                 ApplicationCard(
-                    name = application.applicantName,
+                    name = application.applicantName, // CẬP NHẬT: Sửa biến tham chiếu chuẩn cho trường tên người gửi
                     petName = application.petName,
                     petBreed = application.petBreed,
                     status = application.status,
                     tags = application.tags,
                     note = application.note,
                     actions = {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Button(
-                                onClick = { viewModel.rejectApplication(application.id) },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.SurfaceContainerLow),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Close, contentDescription = "Reject", tint = AdoptColors.ErrorColor, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Từ chối", color = AdoptColors.ErrorColor, fontWeight = FontWeight.Bold)
+                        // TỐI ƯU LOGIC HIỂN THỊ NÚT: Chỉ hiện nút thao tác khi trạng thái là pending
+                        if (application.status.lowercase() == "pending") {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Button(
+                                    onClick = { viewModel.rejectApplication(application.id) }, // Truyền kiểu dữ liệu số Int chuẩn
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.SurfaceContainerLow),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Reject", tint = AdoptColors.ErrorColor, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Từ chối", color = AdoptColors.ErrorColor, fontWeight = FontWeight.Bold)
+                                }
+                                Button(
+                                    onClick = { viewModel.approveApplication(application) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = "Approve", tint = Color.White, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Duyệt", color = Color.White, fontWeight = FontWeight.Bold)
+                                }
                             }
-                            Button(
-                                onClick = { viewModel.approveApplication(application) }, // Đã truyền nguyên Object hợp lệ lên server
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Check, contentDescription = "Approve", tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Duyệt", color = Color.White, fontWeight = FontWeight.Bold)
+                        } else {
+                            // Gợi ý trạng thái đơn trực quan khi đã được xử lý xong
+                            val statusText = when (application.status.lowercase()) {
+                                "approved", "adopted" -> "Đơn yêu cầu này đã được phê duyệt thành công"
+                                "rejected" -> "Đơn yêu cầu này đã bị từ chối"
+                                else -> "Đơn đã xử lý: ${application.status}"
                             }
+                            val statusTextColor = if (application.status.lowercase() == "rejected") AdoptColors.ErrorColor else AdoptColors.SuccessColor
+
+                            Text(
+                                text = statusText,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = statusTextColor,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 )
@@ -246,6 +270,18 @@ fun ApplicationCard(
     note: String?,
     actions: @Composable () -> Unit
 ) {
+    // Đổi màu sắc của Badge trạng thái tùy chỉnh theo chuỗi string trả về
+    val badgeBgColor = when (status.lowercase()) {
+        "pending" -> AdoptColors.OrangePrimary.copy(alpha = 0.15f)
+        "approved", "adopted" -> AdoptColors.SuccessColor.copy(alpha = 0.15f)
+        else -> AdoptColors.ErrorColor.copy(alpha = 0.15f)
+    }
+    val badgeTextColor = when (status.lowercase()) {
+        "pending" -> AdoptColors.OrangePrimary
+        "approved", "adopted" -> AdoptColors.SuccessColor
+        else -> AdoptColors.ErrorColor
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().border(1.dp, AdoptColors.OutlineVariant, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
@@ -260,8 +296,8 @@ fun ApplicationCard(
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                         Text(name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1C1C), modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Box(modifier = Modifier.background(AdoptColors.OrangePrimary.copy(alpha = 0.15f), CircleShape).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                            Text(status.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AdoptColors.OrangePrimary)
+                        Box(modifier = Modifier.background(badgeBgColor, CircleShape).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                            Text(status.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = badgeTextColor)
                         }
                     }
 

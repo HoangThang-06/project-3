@@ -10,16 +10,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Cấu trúc dữ liệu hiển thị trên UI
+// 1. SỬA ĐỔI: Chuyển id từ String sang Int để khớp với Backend PHP
 data class AdoptApplication(
-    val id: String,
+    val id: Int,
     val applicantName: String,
     val petName: String,
     val petBreed: String,
     val status: String,
     val tags: List<Pair<String, Boolean>>,
     val note: String?,
-    val originalPet: Pet
+    val originalPet: Pet? = null // Có thể null vì danh sách request không trả về full object Pet
 )
 
 data class AdminAdoptUiState(
@@ -27,7 +27,7 @@ data class AdminAdoptUiState(
     val applications: List<AdoptApplication> = emptyList(),
     val searchText: String = "",
     val errorMessage: String? = null,
-    val todayProgress: Float = 0.65f
+    val todayProgress: Float = 0.0f
 )
 
 class AdminAdoptViewModel(
@@ -40,114 +40,59 @@ class AdminAdoptViewModel(
     private var originalList: List<AdoptApplication> = emptyList()
 
     init {
-        loadAdoptApplications()
+        fetchAdoptionRequests()
     }
 
-    fun loadAdoptApplications() {
+    // 2. SỬA ĐỔI: Gọi đúng API lấy danh sách yêu cầu nhận nuôi từ Backend
+    fun fetchAdoptionRequests() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val response = petRepository.getAllPets()
-
-                if (response.success && response.pets != null) {
-                    val actualData = response.pets.map { pet ->
-
-                        // 1. Dịch trạng thái (state) từ Database sang Tiếng Việt
-                        val vietnameseStatus = when (pet.state.lowercase()) {
-                            "available" -> "Sẵn sàng"
-                            "reserved" -> "Đang đặt trước"
-                            "adopted" -> "Đã nhận nuôi"
-                            else -> pet.state
-                        }
-
-                        // 2. Dịch giới tính (gender) từ Database sang Tiếng Việt
-                        val vietnameseGender = when (pet.gender.lowercase()) {
-                            "male" -> "Đực"
-                            "female" -> "Cái"
-                            else -> pet.gender
-                        }
-
-                        // 3. Dịch loài (species) từ Database sang Tiếng Việt
-                        val vietnameseSpecies = when (pet.species.lowercase()) {
-                            "dog" -> "Chó"
-                            "cat" -> "Mèo"
-                            "other" -> "Khác"
-                            else -> pet.species
-                        }
-
+                val response = petRepository.getAllAdoptionRequests()
+                if (response.success && response.data != null) {
+                    val mappedList = response.data.map { request ->
                         AdoptApplication(
-                            id = pet.id_pet.toString(),
-                            applicantName = "Yêu cầu nhận nuôi",
-                            petName = pet.name_pet,
-                            petBreed = vietnameseSpecies, // Hiển thị Chó/Mèo thay vì dog/cat
-                            status = vietnameseStatus,    // Hiển thị Sẵn sàng/Đã nhận nuôi thay vì available/adopted
+                            id = request.id,
+                            applicantName = request.user_name,
+                            petName = request.name_pet,
+                            petBreed = request.species,
+                            status = request.state, // Trạng thái: pending, approved, rejected
                             tags = listOf(
-                                "Tuổi: ${pet.age}" to false,
-                                vietnameseGender to (pet.gender.lowercase() == "male") // Highlight nếu là giống đực
+                                "Tuổi: ${request.age}" to false,
+                                "Email: ${request.email}" to true
                             ),
-                            note = pet.description,
-                            originalPet = pet
+                            note = "Ngày đăng ký: ${request.adoption_date}"
                         )
                     }
+                    originalList = mappedList
 
-                    originalList = actualData
+                    // Tính toán tiến độ dựa trên số đơn đã duyệt / tổng số đơn
+                    val approvedCount = mappedList.count { it.status == "approved" || it.status == "adopted" }
+                    val progress = if (mappedList.isNotEmpty()) approvedCount.toFloat() / mappedList.size else 0f
+
                     _uiState.update {
-                        it.copy(isLoading = false, applications = actualData)
+                        it.copy(isLoading = false, applications = mappedList, todayProgress = progress)
                     }
                 } else {
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = response.message ?: "Không có dữ liệu thú cưng trên hệ thống")
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = response.message) }
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isLoading = false, errorMessage = "Lỗi kết nối database: ${e.localizedMessage}")
-                }
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Lỗi kết nối: ${e.localizedMessage}") }
             }
         }
     }
 
-    fun onSearchTextChanged(newText: String) {
-        _uiState.update { it.copy(searchText = newText) }
-
-        val filteredList = if (newText.isBlank()) {
-            originalList
-        } else {
-            originalList.filter {
-                it.petName.contains(newText, ignoreCase = true) ||
-                        it.petBreed.contains(newText, ignoreCase = true) ||
-                        it.status.contains(newText, ignoreCase = true)
-            }
-        }
-        _uiState.update { it.copy(applications = filteredList) }
-    }
-
+    // 3. SỬA ĐỔI: Gọi hàm approveRequest.php (Transaction duyệt đơn hoàn tất)
     fun approveApplication(application: AdoptApplication) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val p = application.originalPet
-                // Khi duyệt, ta gửi trạng thái 'adopted' khớp với ENUM của Database MySQL
-                val response = petRepository.updatePet(
-                    idPet = p.id_pet.toString(),
-                    namePet = p.name_pet,
-                    gender = p.gender,
-                    description = p.description,
-                    state = "adopted", // <--- GỬI ĐÚNG ENUM DATABASE
-                    image = p.image,
-                    age = p.age.toString(),
-                    species = p.species
-                )
+                // Gọi API duyệt hoàn tất đơn nhận nuôi
+                val response = petRepository.approveAdoptionRequest(application.id)
 
                 if (response.success) {
-                    originalList = originalList.filterNot { it.id == application.id }
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            applications = state.applications.filterNot { it.id == application.id },
-                            todayProgress = (state.todayProgress + 0.05f).coerceAtMost(1.0f)
-                        )
-                    }
+                    // Sau khi duyệt thành công, tải lại danh sách mới nhất từ Server
+                    fetchAdoptionRequests()
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = response.message) }
                 }
@@ -157,26 +102,37 @@ class AdminAdoptViewModel(
         }
     }
 
-    fun rejectApplication(applicationId: String) {
+    // 4. SỬA ĐỔI: Gọi hàm update_request_state.php với trạng thái là 'rejected'
+    fun rejectApplication(applicationId: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val response = petRepository.deletePet(applicationId)
+                // Gọi API chuyển trạng thái đơn sang 'rejected'
+                val response = petRepository.updateAdoptionRequestState(applicationId, "rejected")
 
                 if (response.success) {
-                    originalList = originalList.filterNot { it.id == applicationId }
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            applications = state.applications.filterNot { it.id == applicationId }
-                        )
-                    }
+                    // Từ chối thành công, cập nhật lại danh sách tự động
+                    fetchAdoptionRequests()
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = response.message) }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = "Lỗi: ${e.localizedMessage}") }
             }
+        }
+    }
+
+    // XỬ LÝ SEARCH TRÊN UI
+    fun onSearchTextChanged(text: String) {
+        _uiState.update { it.copy(searchText = text) }
+        if (text.isBlank()) {
+            _uiState.update { it.copy(applications = originalList) }
+        } else {
+            val filtered = originalList.filter {
+                it.applicantName.contains(text, ignoreCase = true) ||
+                        it.petName.contains(text, ignoreCase = true)
+            }
+            _uiState.update { it.copy(applications = filtered) }
         }
     }
 }

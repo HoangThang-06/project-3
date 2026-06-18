@@ -10,9 +10,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
-
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 class AdminManagePetViewModel : ViewModel() {
 
+    var selectedPet by mutableStateOf<Pet?>(null)
+        private set
+
+    fun selectPet(pet: Pet) {
+        selectedPet = pet
+    }
     private val repository = PetRepository()
 
     // Danh sách gốc từ API
@@ -59,15 +67,16 @@ class AdminManagePetViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
+                    // Bỏ toàn bộ .toString() của id_pet và age đi:
                     repository.updatePet(
-                        idPet = pet.id_pet.toString(),
-                        namePet = pet.name_pet,
-                        gender = pet.gender,
-                        description = pet.description,
-                        state = newState,
-                        image = pet.image,
-                        age = pet.age.toString(),
-                        species = pet.species
+                        pet.id_pet, // Truyền trực tiếp kiểu Int
+                        pet.name_pet,
+                        pet.gender,
+                        pet.description,
+                        newState,
+                        pet.image,
+                        pet.age,    // Truyền trực tiếp kiểu Int
+                        pet.species
                     )
                 }
                 if (response.success) {

@@ -21,6 +21,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Query
+import com.example.project_3.data.model.AdoptionResponse
+import com.example.project_3.data.model.CommonResponse
 
 interface ApiService {
 
@@ -79,15 +81,15 @@ interface ApiService {
     ): PetResponse
 
     @FormUrlEncoded
-    @POST("pet/update_pet.php")
+    @POST("pet/update_pet.php") // Đường dẫn API của bạn
     suspend fun updatePet(
-        @Field("id_pet") idPet: String,
+        @Field("id_pet") idPet: Int,       // Đổi thành Int
         @Field("name_pet") namePet: String,
         @Field("gender") gender: String,
         @Field("description") description: String,
         @Field("state") state: String,
         @Field("image") image: String,
-        @Field("age") age: String,
+        @Field("age") age: Int,             // Đổi thành Int
         @Field("species") species: String
     ): PetResponse
 
@@ -154,7 +156,7 @@ interface ApiService {
 
 
     // ==========================================
-    // 4. SOCIAL & ARTICLE APIs (Mạng xã hội công đồng)
+    // 4. SOCIAL & ARTICLE APIs (Mạng xã hội cộng đồng)
     // ==========================================
 
     @GET("get_articles.php")
@@ -169,6 +171,34 @@ interface ApiService {
         @Field("article_id") articleId: Int
     ): BaseResponse
 
+    // ---- THÊM MỚI 3 API PHỤC VỤ ADMIN ĐỂ DUYỆT, SỬA, XÓA ----
+
+    // 1. API Duyệt / Thay đổi trạng thái nhanh bài báo ('public' hoặc 'private')
+    @FormUrlEncoded
+    @POST("update_article_status.php")
+    suspend fun updateArticleStatus(
+        @Field("id_article") idArticle: Int,
+        @Field("status") status: String
+    ): BaseResponse
+
+    // 2. API Cập nhật toàn bộ thông tin nội dung bài báo
+    @FormUrlEncoded
+    @POST("update_article.php")
+    suspend fun updateArticle(
+        @Field("id_article") idArticle: Int,
+        @Field("title") title: String,
+        @Field("content") content: String,
+        @Field("image") image: String,
+        @Field("category") category: String,
+        @Field("status") status: String
+    ): BaseResponse
+
+    // 3. API Xóa bài báo khỏi hệ thống (Đồng thời xóa like & comment liên quan)
+    @FormUrlEncoded
+    @POST("delete_article.php")
+    suspend fun deleteArticle(
+        @Field("id_article") idArticle: Int
+    ): BaseResponse
 
     // ==========================================
     // 5. USER HISTORY & ACTIONS APIs (Hoạt động cá nhân)
@@ -238,4 +268,24 @@ interface ApiService {
         @Part("address") address: RequestBody,
         @Part image: MultipartBody.Part?
     ): BaseResponse
+
+    //adoption
+    // Gọi đến api số 1
+    @GET("adoption/get_all_requests.php")
+    suspend fun getAllRequests(): AdoptionResponse
+
+    // Gọi đến api số 2
+    @FormUrlEncoded
+    @POST("adoption/update_request_state.php")
+    suspend fun updateRequestState(
+        @Field("id") id: Int, // Truyền Int khớp với DB
+        @Field("state") state: String
+    ): CommonResponse
+
+    // Gọi đến api số 3
+    @FormUrlEncoded
+    @POST("adoption/approve_request.php")
+    suspend fun approveRequest(
+        @Field("id") id: Int
+    ): CommonResponse
 }
