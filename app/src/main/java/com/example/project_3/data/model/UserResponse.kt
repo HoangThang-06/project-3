@@ -8,5 +8,7 @@ data class UserResponse(
 
     val user: User? = null,
 
-    val users: List<User>? = null
+    val users: List<User>? = null,
+
+    val otp: String? = null
 )

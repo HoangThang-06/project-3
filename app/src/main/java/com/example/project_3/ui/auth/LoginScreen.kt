@@ -31,6 +31,8 @@ import com.example.project_3.viewmodel.LoginViewModel
 fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel(),
     onNavigateToRegister: () -> Unit,
+    // 🔥 THÊM MỚI TẠI ĐÂY: Tham số để điều hướng sang Quên mật khẩu
+    onNavigateToForgotPassword: () -> Unit,
     onAdminLoginSuccess: () -> Unit,
     onUserLoginSuccess: () -> Unit
 ) {
@@ -45,21 +47,15 @@ fun LoginScreen(
     // LOGIN SUCCESS (SỬA TẠI ĐÂY)
     // =========================
     LaunchedEffect(loginViewModel.currentUser) {
-
         loginViewModel.currentUser?.let { user ->
-
             sessionManager.saveUser(user)
-
             when (user.role.lowercase()) {
-
                 "admin" -> {
                     onAdminLoginSuccess()
                 }
-
                 "user" -> {
                     onUserLoginSuccess()
                 }
-
                 else -> {
                     loginViewModel.clearMessage()
                 }
@@ -171,12 +167,13 @@ fun LoginScreen(
                 )
             )
 
+            // 🔥 SỬA TẠI ĐÂY: Kích hoạt nút bấm chuyển màn hình khi bấm Quên mật khẩu
             Text(
                 text = "Quên mật khẩu?",
                 color = Color(0xFF00796B),
                 modifier = Modifier
                     .align(Alignment.End)
-                    .clickable { },
+                    .clickable { onNavigateToForgotPassword() }, // Gọi Lambda để chạy điều hướng
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -206,7 +203,6 @@ fun LoginScreen(
             // =========================
             Button(
                 onClick = {
-                    // TRUYỀN THÊM context VÀO ĐẦU HÀM:
                     loginViewModel.login(context, emailOrUser, password)
                 },
                 modifier = Modifier

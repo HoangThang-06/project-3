@@ -288,4 +288,12 @@ interface ApiService {
     suspend fun approveRequest(
         @Field("id") id: Int
     ): CommonResponse
+
+    @FormUrlEncoded
+    @POST("user/reset_password.php")
+    suspend fun resetPasswordCustom(
+        @Field("action") action: String,
+        @Field("email") email: String,
+        @Field("new_password") newPassword: String = ""
+    ): UserResponse // Đảm bảo cấu trúc UserResponse của bạn có chứa (val success: Boolean, val message: String)
 }

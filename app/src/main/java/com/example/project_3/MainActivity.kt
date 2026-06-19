@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project_3.ui.profile.FavoriteScreen
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
+import com.example.project_3.ui.auth.ForgotPasswordScreen // 🔥 THÊM IMPORT NÀY
 import com.example.project_3.ui.home.HomeScreen
 import com.example.project_3.ui.adopt.PetDetailScreen
 import com.example.project_3.ui.profile.AdoptHistoryScreen
@@ -28,6 +29,7 @@ import com.example.project_3.viewmodel.AdminManageArticleViewModel
 import com.example.project_3.viewmodel.AdminProfileViewModel
 import com.example.project_3.viewmodel.AdminManageUserViewModel
 import com.example.project_3.ui.admin.AdminManageUserScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +51,7 @@ fun AppNavigation() {
     val adminManageArticleViewModel: AdminManageArticleViewModel = viewModel()
     val adminProfileViewModel: AdminProfileViewModel = viewModel()
     val adminManageUserViewModel: AdminManageUserViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = "login",
@@ -59,6 +62,10 @@ fun AppNavigation() {
             LoginScreen(
                 onNavigateToRegister = {
                     navController.navigate("register")
+                },
+                // 🔥 THÊM MỚI TẠI ĐÂY: Nhận sự kiện chuyển màn hình quên mật khẩu từ LoginScreen
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgot_password")
                 },
                 onAdminLoginSuccess = {
                     navController.navigate("admin_home") {
@@ -80,6 +87,11 @@ fun AppNavigation() {
                     navController.navigate("login")
                 }
             )
+        }
+
+        // 🔥 THÊM MỚI TẠI ĐÂY: Khai báo Route cho màn hình Quên mật khẩu đa năng (Gồm 3 bước)
+        composable("forgot_password") {
+            ForgotPasswordScreen(navController = navController)
         }
 
         // 3. Màn hình Trang chủ User
@@ -162,10 +174,11 @@ fun AppNavigation() {
             AdminProfileScreen(
                 currentAdminId = adminId,
                 navController = navController,
-                viewModel = adminProfileViewModel // Lúc này nó sẽ lấy từ biến dùng chung ở đầu hàm
+                viewModel = adminProfileViewModel
             )
         }
 
+        // Thay đổi route thành dạng tham số tùy chọn (dùng dấu chấm hỏi ?adminId={adminId})
         composable(
             route = "admin_edit_profile/{adminId}",
             arguments = listOf(
@@ -180,11 +193,9 @@ fun AppNavigation() {
             )
         }
 
-        // Đổi từ adminId = adminId thành currentUserId = adminId để khớp định nghĩa hàm
-        // Thay đổi route thành dạng tham số tùy chọn (dùng dấu chấm hỏi ?adminId={adminId})
         composable(route = "admin_manage_user") {
             AdminManageUserScreen(
-                currentUserId = "", // Truyền chuỗi rỗng thoải mái vì bên trong Screen đã tự lấy từ Session
+                currentUserId = "",
                 navController = navController,
                 viewModel = adminManageUserViewModel
             )
