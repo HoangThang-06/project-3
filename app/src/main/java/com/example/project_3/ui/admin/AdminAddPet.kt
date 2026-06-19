@@ -34,8 +34,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import com.example.project_3.viewmodel.AdminAddPetViewModel
 
-// Giả định các biến màu sắc hệ thống của dự án bạn
-val OutlineVariant = Color(0xFFDDC1B3)
+// 🎨 ĐỊNH NGHĨA BẢNG MÀU RIÊNG CHO MÀN HÌNH ADD PET (XỬ LÝ LỖI UNRESOLVED REFERENCE)
+val AddPetPrimaryColor = Color(0xFF8D4000)
+val AddPetPrimaryContainer = Color(0xFFFFDBC9)
+val AddPetOnPrimaryContainer = Color(0xFF331400)
+val AddPetPrimaryFixed = Color(0xFFFFDBC9)
+val AddPetBackgroundColor = Color(0xFFFBFBFB)
+val AddPetSurfaceContainer = Color(0xFFEFEDED)
+val AddPetSurfaceContainerLowest = Color(0xFFFFFFFF)
+val AddPetOnSurface = Color(0xFF1B1C1C)
+val AddPetOnSurfaceVariant = Color(0xFF564338)
+val AddPetOutlineVariant = Color(0xFFDDC1B3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,27 +84,26 @@ fun AdminAddPet(
     }
 
     Scaffold(
-        containerColor = BackgroundColor,
+        containerColor = AddPetBackgroundColor,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor),
-                title = { Text(text = "Add New Pet", color = PrimaryColor, fontSize = 24.sp, fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = AddPetBackgroundColor),
+                title = { Text(text = "Add New Pet", color = AddPetPrimaryColor, fontSize = 24.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        // Khắc phục cảnh báo bằng cách sử dụng phiên bản AutoMirrored
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AddPetPrimaryColor)
                     }
                 },
                 actions = {
                     IconButton(onClick = { }) {
-                        Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Help", tint = PrimaryColor)
+                        Icon(Icons.AutoMirrored.Filled.Help, contentDescription = "Help", tint = AddPetPrimaryColor)
                     }
                 }
             )
         },
         bottomBar = {
             val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-            NavigationBar(containerColor = SurfaceContainerLowest, tonalElevation = 8.dp) {
+            NavigationBar(containerColor = AddPetSurfaceContainerLowest, tonalElevation = 8.dp) {
                 val items = listOf(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
@@ -118,11 +126,11 @@ fun AdminAddPet(
                         icon = { Icon(imageVector = icon, contentDescription = title) },
                         label = { Text(text = title, fontSize = 10.sp) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = OnPrimaryContainer,
+                            selectedIconColor = AddPetOnPrimaryContainer,
                             selectedTextColor = Color(0xFF1B1C1C),
-                            indicatorColor = PrimaryFixed.copy(alpha = 0.6f),
-                            unselectedIconColor = OnSurfaceVariant,
-                            unselectedTextColor = OnSurfaceVariant
+                            indicatorColor = AddPetPrimaryFixed.copy(alpha = 0.6f),
+                            unselectedIconColor = AddPetOnSurfaceVariant,
+                            unselectedTextColor = AddPetOnSurfaceVariant
                         )
                     )
                 }
@@ -131,7 +139,7 @@ fun AdminAddPet(
     ) { innerPadding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PrimaryColor)
+                CircularProgressIndicator(color = AddPetPrimaryColor)
             }
         } else {
             LazyColumn(
@@ -144,7 +152,7 @@ fun AdminAddPet(
                         text = "Hình ảnh thú cưng (Yêu cầu 1 ảnh duy nhất)",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceVariant,
+                        color = AddPetOnSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -156,8 +164,8 @@ fun AdminAddPet(
                         Box(
                             modifier = Modifier
                                 .size(110.dp)
-                                .background(SurfaceContainer, RoundedCornerShape(12.dp))
-                                .border(2.dp, OutlineVariant, RoundedCornerShape(12.dp))
+                                .background(AddPetSurfaceContainer, RoundedCornerShape(12.dp))
+                                .border(2.dp, AddPetOutlineVariant, RoundedCornerShape(12.dp))
                                 .clickable { imagePickerLauncher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
@@ -166,13 +174,13 @@ fun AdminAddPet(
                                     Icon(
                                         imageVector = Icons.Default.AddCircle,
                                         contentDescription = "Thêm ảnh",
-                                        tint = PrimaryColor,
+                                        tint = AddPetPrimaryColor,
                                         modifier = Modifier.size(32.dp)
                                     )
                                     Text(
                                         text = "Chọn ảnh",
                                         fontSize = 12.sp,
-                                        color = OnSurface,
+                                        color = AddPetOnSurface,
                                         fontWeight = FontWeight.Medium,
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
@@ -191,11 +199,11 @@ fun AdminAddPet(
                     }
                 }
 
-                // SECTION 2: TÊN THÚ CƯNG & LOÀI (Đồng bộ Enum DB)
+                // SECTION 2: TÊN THÚ CƯNG & LOÀI
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Tên thú cưng", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                            Text("Tên thú cưng", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                             OutlinedTextField(
                                 value = petName,
                                 onValueChange = { petName = it },
@@ -203,16 +211,16 @@ fun AdminAddPet(
                                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryColor,
-                                    unfocusedBorderColor = OutlineVariant,
-                                    focusedContainerColor = SurfaceContainerLowest,
-                                    unfocusedContainerColor = SurfaceContainerLowest
+                                    focusedBorderColor = AddPetPrimaryColor,
+                                    unfocusedBorderColor = AddPetOutlineVariant,
+                                    focusedContainerColor = AddPetSurfaceContainerLowest,
+                                    unfocusedContainerColor = AddPetSurfaceContainerLowest
                                 )
                             )
                         }
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Loài", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                            Text("Loài", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                             var expanded by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
@@ -224,14 +232,13 @@ fun AdminAddPet(
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    // Khắc phục cảnh báo menuAnchor phiên bản mới nhất bằng cách chỉ định rõ MenuAnchorType
                                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryColor,
-                                        unfocusedBorderColor = OutlineVariant,
-                                        focusedContainerColor = SurfaceContainerLowest,
-                                        unfocusedContainerColor = SurfaceContainerLowest
+                                        focusedBorderColor = AddPetPrimaryColor,
+                                        unfocusedBorderColor = AddPetOutlineVariant,
+                                        focusedContainerColor = AddPetSurfaceContainerLowest,
+                                        unfocusedContainerColor = AddPetSurfaceContainerLowest
                                     )
                                 )
                                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -248,7 +255,7 @@ fun AdminAddPet(
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Giống", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                            Text("Giống", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                             OutlinedTextField(
                                 value = breed,
                                 onValueChange = { breed = it },
@@ -256,16 +263,16 @@ fun AdminAddPet(
                                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryColor,
-                                    unfocusedBorderColor = OutlineVariant,
-                                    focusedContainerColor = SurfaceContainerLowest,
-                                    unfocusedContainerColor = SurfaceContainerLowest
+                                    focusedBorderColor = AddPetPrimaryColor,
+                                    unfocusedBorderColor = AddPetOutlineVariant,
+                                    focusedContainerColor = AddPetSurfaceContainerLowest,
+                                    unfocusedContainerColor = AddPetSurfaceContainerLowest
                                 )
                             )
                         }
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Tuổi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                            Text("Tuổi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                             var expandedAge by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(
                                 expanded = expandedAge,
@@ -280,10 +287,10 @@ fun AdminAddPet(
                                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryColor,
-                                        unfocusedBorderColor = OutlineVariant,
-                                        focusedContainerColor = SurfaceContainerLowest,
-                                        unfocusedContainerColor = SurfaceContainerLowest
+                                        focusedBorderColor = AddPetPrimaryColor,
+                                        unfocusedBorderColor = AddPetOutlineVariant,
+                                        focusedContainerColor = AddPetSurfaceContainerLowest,
+                                        unfocusedContainerColor = AddPetSurfaceContainerLowest
                                     )
                                 )
                                 ExposedDropdownMenu(expanded = expandedAge, onDismissRequest = { expandedAge = false }) {
@@ -296,9 +303,9 @@ fun AdminAddPet(
                     }
                 }
 
-                // SECTION 4: GIỚI TÍNH (male / female)
+                // SECTION 4: GIỚI TÍNH
                 item {
-                    Text("Giới tính", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    Text("Giới tính", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         val isMale = selectedGender == "male"
@@ -307,15 +314,15 @@ fun AdminAddPet(
                                 .weight(1f)
                                 .height(54.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isMale) PrimaryColor else Color.Transparent)
-                                .border(1.dp, if (isMale) PrimaryColor else OutlineVariant, RoundedCornerShape(8.dp))
+                                .background(if (isMale) AddPetPrimaryColor else Color.Transparent)
+                                .border(1.dp, if (isMale) AddPetPrimaryColor else AddPetOutlineVariant, RoundedCornerShape(8.dp))
                                 .clickable { selectedGender = "male" },
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Male, contentDescription = null, tint = if (isMale) Color.White else PrimaryColor)
+                            Icon(Icons.Default.Male, contentDescription = null, tint = if (isMale) Color.White else AddPetPrimaryColor)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Đực", color = if (isMale) Color.White else OnSurface, fontWeight = FontWeight.Medium)
+                            Text("Đực", color = if (isMale) Color.White else AddPetOnSurface, fontWeight = FontWeight.Medium)
                         }
 
                         val isFemale = selectedGender == "female"
@@ -324,22 +331,22 @@ fun AdminAddPet(
                                 .weight(1f)
                                 .height(54.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isFemale) PrimaryColor else Color.Transparent)
-                                .border(1.dp, if (isFemale) PrimaryColor else OutlineVariant, RoundedCornerShape(8.dp))
+                                .background(if (isFemale) AddPetPrimaryColor else Color.Transparent)
+                                .border(1.dp, if (isFemale) AddPetPrimaryColor else AddPetOutlineVariant, RoundedCornerShape(8.dp))
                                 .clickable { selectedGender = "female" },
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Female, contentDescription = null, tint = if (isFemale) Color.White else PrimaryColor)
+                            Icon(Icons.Default.Female, contentDescription = null, tint = if (isFemale) Color.White else AddPetPrimaryColor)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Cái", color = if (isFemale) Color.White else OnSurface, fontWeight = FontWeight.Medium)
+                            Text("Cái", color = if (isFemale) Color.White else AddPetOnSurface, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
 
                 // SECTION 5: TÌNH TRẠNG SỨC KHỎE
                 item {
-                    Text("Tình trạng sức khỏe", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    Text("Tình trạng sức khỏe", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                     OutlinedTextField(
                         value = healthStatus,
                         onValueChange = { healthStatus = it },
@@ -348,17 +355,17 @@ fun AdminAddPet(
                         minLines = 3,
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryColor,
-                            unfocusedBorderColor = OutlineVariant,
-                            focusedContainerColor = SurfaceContainerLowest,
-                            unfocusedContainerColor = SurfaceContainerLowest
+                            focusedBorderColor = AddPetPrimaryColor,
+                            unfocusedBorderColor = AddPetOutlineVariant,
+                            focusedContainerColor = AddPetSurfaceContainerLowest,
+                            unfocusedContainerColor = AddPetSurfaceContainerLowest
                         )
                     )
                 }
 
                 // SECTION 6: ĐẶC ĐIỂM TÍNH CÁCH
                 item {
-                    Text("Đặc điểm tính cách", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    Text("Đặc điểm tính cách", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                     Spacer(modifier = Modifier.height(6.dp))
                     val traits = listOf("Thân thiện", "Nhút nhát", "Năng động", "Ham ăn")
 
@@ -370,16 +377,16 @@ fun AdminAddPet(
                                 onClick = { viewModel.togglePersonality(trait) },
                                 label = { Text(trait, fontSize = 14.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = PrimaryFixed,
-                                    selectedLabelColor = PrimaryColor,
-                                    containerColor = SurfaceContainerLowest,
-                                    labelColor = OnSurfaceVariant
+                                    selectedContainerColor = AddPetPrimaryFixed,
+                                    selectedLabelColor = AddPetPrimaryColor,
+                                    containerColor = AddPetSurfaceContainerLowest,
+                                    labelColor = AddPetOnSurfaceVariant
                                 ),
                                 border = FilterChipDefaults.filterChipBorder(
                                     enabled = true,
                                     selected = isSelected,
-                                    borderColor = if (isSelected) PrimaryColor else OutlineVariant,
-                                    selectedBorderColor = PrimaryColor
+                                    borderColor = if (isSelected) AddPetPrimaryColor else AddPetOutlineVariant,
+                                    selectedBorderColor = AddPetPrimaryColor
                                 ),
                                 shape = RoundedCornerShape(50.dp)
                             )
@@ -389,7 +396,7 @@ fun AdminAddPet(
 
                 // SECTION 7: MÔ TẢ CHI TIẾT
                 item {
-                    Text("Mô tả thêm", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    Text("Mô tả thêm", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AddPetOnSurfaceVariant)
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
@@ -398,10 +405,10 @@ fun AdminAddPet(
                         minLines = 4,
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryColor,
-                            unfocusedBorderColor = OutlineVariant,
-                            focusedContainerColor = SurfaceContainerLowest,
-                            unfocusedContainerColor = SurfaceContainerLowest
+                            focusedBorderColor = AddPetPrimaryColor,
+                            unfocusedBorderColor = AddPetOutlineVariant,
+                            focusedContainerColor = AddPetSurfaceContainerLowest,
+                            unfocusedContainerColor = AddPetSurfaceContainerLowest
                         )
                     )
                 }
@@ -428,7 +435,7 @@ fun AdminAddPet(
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(54.dp).padding(vertical = 4.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
+                        colors = ButtonDefaults.buttonColors(containerColor = AddPetPrimaryColor),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null, tint = Color.White)

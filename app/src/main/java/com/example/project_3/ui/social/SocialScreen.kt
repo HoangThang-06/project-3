@@ -36,6 +36,23 @@ import com.example.project_3.data.model.Article
 import com.example.project_3.data.model.Comment
 import com.example.project_3.viewmodel.SocialViewModel
 
+// 🔥 HÀM HELPER: Xử lý tối ưu hóa URL đường dẫn hình ảnh thông minh từ Server PHP XAMPP
+fun getFullImageUrl(imagePath: String?): Any {
+    if (imagePath.isNullOrEmpty() || imagePath == "default" || imagePath == "null" || imagePath.trim() == "/uploads/articles/") {
+        return R.drawable.ic_default_avatar // Trả về ID drawable mặc định nếu dữ liệu rỗng
+    }
+
+    val baseUrl = "http://10.0.2.2/project-3"
+
+    return when {
+        imagePath.startsWith("/uploads") -> "$baseUrl$imagePath"
+        imagePath.startsWith("uploads") -> "$baseUrl/$imagePath"
+        imagePath.startsWith("images") -> "$baseUrl/$imagePath"
+        imagePath.startsWith("/images") -> "$baseUrl$imagePath"
+        else -> if (imagePath.startsWith("/")) "$baseUrl$imagePath" else "$baseUrl/$imagePath"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
@@ -43,15 +60,9 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
     val sessionManager = remember { SessionManager(context) }
     val currentUserId = sessionManager.getUserId()
 
-    // 1. QUẢN LÝ ĐIỀU HƯỚNG MÀN HÌNH BẰNG STATE
-    // "feed" tức là đang ở bảng tin công khai, "create" là đang ở màn hình soạn bài viết
     var currentScreen by remember { mutableStateOf("feed") }
-
-    // Quản lý trạng thái ẩn/hiển của Bottom Sheet
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    // Lưu lại ID bài viết đang được click mở bình luận
     var selectedArticleId by remember { mutableStateOf(-1) }
 
     LaunchedEffect(currentUserId) {
@@ -61,21 +72,17 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
     val articleList = socialViewModel.articleList
     val isLoading = socialViewModel.isLoading.value
 
-    // 2. KHỐI LOGIC ĐIỀU KIỆN RẼ NHÁNH GIAO DIỆN
     if (currentScreen == "create") {
-        // Nếu trạng thái là 'create', hiển thị màn hình soạn thảo bài đăng
         CreateArticleScreen(
             socialViewModel = socialViewModel,
             currentUserId = currentUserId,
-            onBack = { currentScreen = "feed" } // Định nghĩa sự kiện quay lại bảng tin khi đăng xong hoặc bấm hủy
+            onBack = { currentScreen = "feed" }
         )
     } else {
-        // Ngược lại, hiển thị dòng thời gian mạng xã hội thông thường
         Scaffold(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
                     onClick = {
-                        // SỬA TẠI ĐÂY: Khi bấm nút sẽ chuyển trạng thái màn hình sang tạo bài viết
                         if (currentUserId == -1) {
                             Toast.makeText(context, "Vui lòng đăng nhập để đăng bài!", Toast.LENGTH_SHORT).show()
                         } else {
@@ -89,7 +96,7 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
                 ) {
                     Icon(painterResource(id = R.drawable.ic_image), null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Đăng bài viết", fontSize = 14.sp) // Đổi tên text hiển thị luôn cho chuẩn
+                    Text("Đăng bài viết", fontSize = 14.sp)
                 }
             },
             containerColor = Color(0xFFFBFBFB)
@@ -124,7 +131,6 @@ fun SocialScreen(socialViewModel: SocialViewModel = viewModel()) {
                 }
             }
 
-            // KHỐI GIAO DIỆN BOTTOM SHEET BÌNH LUẬN TRƯỢT LÊN
             if (showBottomSheet) {
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
@@ -159,14 +165,17 @@ fun ArticleCard(
             // Header User
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
-                    model = "http://10.0.2.2/project-3/upload${article.author_avatar}",
-                    contentDescription = null,
+                    model = getFullImageUrl(article.author_avatar),
+                    contentDescription = "Author Avatar",
                     modifier = Modifier.size(45.dp).clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.ic_default_avatar),
+                    error = painterResource(id = R.drawable.ic_default_avatar)
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = article.author_name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    // 💡 SỬA: Đồng bộ gọi đúng tên trường biến snake_case từ JSON API trả về
                     Text(text = "${article.create_at} • ${article.authorAddress}", color = Color.Gray, fontSize = 12.sp)
                 }
                 IconButton(onClick = { }) { Icon(Icons.Default.MoreVert, null, tint = Color.Gray) }
@@ -174,12 +183,13 @@ fun ArticleCard(
 
             Spacer(Modifier.height(12.dp))
 
-            // Ảnh bài đăng
+            // Ảnh bài đăng (Tự động chuẩn hóa link thông qua helper)
             AsyncImage(
-                model = "http://10.0.2.2/project-3/upload${article.image}",
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(350.dp).clip(RoundedCornerShape(20.dp)),
-                contentScale = ContentScale.Crop
+                model = getFullImageUrl(article.image),
+                contentDescription = "Post Image",
+                modifier = Modifier.fillMaxWidth().height(280.dp).clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.logo_paws_hearts) // Hiện ảnh logo thay thế nếu đường dẫn die
             )
 
             // Thanh tương tác (Like, Comment, Share)
@@ -197,7 +207,6 @@ fun ArticleCard(
                 }
                 Text(" ${article.likes_count}", Modifier.padding(start = 4.dp, end = 16.dp))
 
-                // KHU VỰC BẤM BÌNH LUẬN ĐỘC LẬP
                 Row(
                     modifier = Modifier.clickable { onCommentClick() },
                     verticalAlignment = Alignment.CenterVertically
@@ -226,7 +235,7 @@ fun ArticleCard(
                 tags.forEach { tag ->
                     val cleanTag = tag.trim()
                     if (cleanTag.isNotEmpty()) {
-                        val isHappy = cleanTag.contains("hanhphuc") || cleanTag.contains("yeuthuong")
+                        val isHappy = cleanTag.contains("hanhphuc") || cleanTag.contains("yeuthuong") || cleanTag.contains("meomayman")
                         Surface(
                             color = if (isHappy) Color(0xFFE0F7FA) else Color(0xFFFCE4EC),
                             shape = RoundedCornerShape(12.dp)
@@ -245,7 +254,6 @@ fun ArticleCard(
     }
 }
 
-// GIAO DIỆN CHI TIẾT BÊN TRONG HỘP BÌNH LUẬN TRƯỢT
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentSheetContent(
@@ -363,10 +371,12 @@ fun CommentSheetContent(
 fun CommentItem(comment: Comment) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         AsyncImage(
-            model = "http://10.0.2.2/project-3/upload${comment.user_avatar}",
-            contentDescription = null,
+            model = getFullImageUrl(comment.user_avatar),
+            contentDescription = "Comment User Avatar",
             modifier = Modifier.size(36.dp).clip(CircleShape),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.ic_default_avatar),
+            error = painterResource(id = R.drawable.ic_default_avatar)
         )
         Spacer(Modifier.width(8.dp))
         Column {

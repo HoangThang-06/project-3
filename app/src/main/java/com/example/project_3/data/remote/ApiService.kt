@@ -1,6 +1,7 @@
 package com.example.project_3.data.remote
 
 import com.example.project_3.data.model.AddCommentResponse
+import com.example.project_3.data.model.AdminStatsResponse
 import com.example.project_3.data.model.AdoptionRequest
 import com.example.project_3.data.model.ArticleResponse
 import com.example.project_3.data.model.LoginResponse
@@ -26,6 +27,7 @@ import retrofit2.http.Part
 import retrofit2.http.Query
 import com.example.project_3.data.model.AdoptionResponse
 import com.example.project_3.data.model.CommonResponse
+import com.example.project_3.data.model.GenericResponse
 
 interface ApiService {
 
@@ -132,7 +134,7 @@ interface ApiService {
         @Field("birthday") birthday: String,
         @Field("gender") gender: String,
         @Field("address") address: String,
-        @Field("email") email: String
+        @Field("email") email: String,
     ): UserResponse
 
     @FormUrlEncoded
@@ -296,4 +298,16 @@ interface ApiService {
         @Field("email") email: String,
         @Field("new_password") newPassword: String = ""
     ): UserResponse // Đảm bảo cấu trúc UserResponse của bạn có chứa (val success: Boolean, val message: String)
+
+    @GET("user/get_admin_starts.php") // Đường dẫn tương đối tính từ Base URL của bạn
+    suspend fun getAdminStats(): AdminStatsResponse
+
+    @Multipart
+    @POST("user/add_event.php")
+    suspend fun addEvent(
+        @Part("title") title: RequestBody,
+        @Part("date") date: RequestBody,
+        @Part("location") location: RequestBody,
+        @Part image: MultipartBody.Part?
+    ): GenericResponse// Tạo hoặc dùng một class check success: Boolean chung
 }

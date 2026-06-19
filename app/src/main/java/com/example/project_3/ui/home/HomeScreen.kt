@@ -41,6 +41,33 @@ import com.example.project_3.data.model.KnowledgeModel
 import com.example.project_3.ui.report.ReportScreen
 import com.example.project_3.viewmodel.HomeViewModel
 
+// 🔥 HÀM HELPER: Sửa tất cả các lỗi đường dẫn dị biệt do Backend trang Home trả về
+fun getHomeImageUrl(rawUrl: String?): Any {
+    if (rawUrl.isNullOrEmpty() || rawUrl == "null") {
+        return R.drawable.ic_paw_print
+    }
+
+    val baseUrl = "http://10.0.2.2/project-3"
+
+    // 1. Sửa lỗi dính chữ thiếu dấu gạch chéo: http://10.0.2.2/project-3images/...
+    if (rawUrl.contains("project-3images")) {
+        return rawUrl.replace("project-3images", "project-3/images")
+    }
+
+    // 2. Sửa lỗi thiếu domain của Event: /uploads/articles/...
+    if (rawUrl.startsWith("/")) {
+        return "$baseUrl$rawUrl"
+    }
+
+    // 3. Nếu đã chứa http:// hoặc https:// chuẩn chỉnh
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+        return rawUrl
+    }
+
+    // 4. Các trường hợp còn lại (như images/... hoặc uploads/...)
+    return "$baseUrl/$rawUrl"
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -48,21 +75,14 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
-    // Quản lý trạng thái tab đang chọn
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
     val items = listOf("Home", "Adopt", "Report", "Social", "Profile")
-
-    // QUẢN LÝ TRẠNG THÁI ĐÓNG/MỞ BOTTOM SHEET THÔNG BÁO (DÙNG CHUNG CHO TẤT CẢ CÁC TAB)
     var showNotificationSheet by remember { mutableStateOf(false) }
-
-    // Trạng thái lưu bài viết kiến thức đang được chọn để xem chi tiết
     var selectedKnowledge by remember { mutableStateOf<KnowledgeModel?>(null) }
 
-    // Khởi tạo các ViewModel
     val socialViewModel: SocialViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
 
-    // Theo dõi trạng thái selectedItem để kéo số liệu mới từ DB
     LaunchedEffect(selectedItem) {
         homeViewModel.fetchNotifications(userId = 1)
     }
@@ -411,17 +431,6 @@ fun HomeContent(
 
 @Composable
 fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
-    // ĐÃ CẬP NHẬT: Chuẩn hóa link ảnh cho bài viết kiến thức
-    val finalKnowledgeImageUrl = remember(knowledge.image) {
-        val imagePath = knowledge.image ?: ""
-        when {
-            imagePath.startsWith("http://") || imagePath.startsWith("https://") -> imagePath
-            imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
-            imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
-            else -> "http://10.0.2.2/project-3/images/$imagePath"
-        }
-    }
-
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
@@ -432,7 +441,7 @@ fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = finalKnowledgeImageUrl,
+                model = getHomeImageUrl(knowledge.image), // 💡 SỬA: Chuẩn hóa link kiến thức
                 contentDescription = null,
                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop,
@@ -451,49 +460,22 @@ fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
 
 @Composable
 fun FeaturedPetCard(pet: Pet, onClick: () -> Unit) {
-    // TỐI ƯU GIA CƯỜNG: Quét và bao vây mọi khả năng đặt tên thuộc tính từ mảng JSON của PHP
-    val finalPetImageUrl = remember(pet) {
-        // 1. Thử lấy từ trường 'image' thông thường
-        var imagePath = pet.image ?: ""
-
-        // 2. Nếu 'image' trống, thử tìm cách ép kiểu hoặc kiểm tra tính linh hoạt của đối tượng dữ liệu
-        // (Một số model mapping sử dụng các hàm getter hoặc trường ẩn nếu từ API trộn)
-        if (imagePath.isEmpty()) {
-            // Đây là giải pháp phòng vệ trong trường hợp backend trả về cấu trúc lai (hybrid model)
-            // Nếu bạn có thuộc tính image_url trong model Pet, hãy bỏ chú thích dòng dưới:
-            // imagePath = (pet as? Any)?.let { javaClass.getDeclaredField("image_url").get(it) as? String } ?: ""
-        }
-
-        // 3. Chuẩn hóa chuỗi URL trỏ về máy chủ XAMPP
-        when {
-            imagePath.isEmpty() -> ""
-            imagePath.startsWith("http://") || imagePath.startsWith("https://") -> imagePath
-            imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
-            imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
-            else -> "http://10.0.2.2/project-3/images/$imagePath"
-        }
-    }
-
     Card(
         modifier = Modifier.width(160.dp).clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        // Thay đổi quan trọng: Thay thế Box chồng chéo cũ bằng Column rõ ràng để cấu trúc Layout
-        // không bị vỡ hoặc đè mất không gian nạp ảnh của AsyncImage.
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(modifier = Modifier.fillMaxWidth().height(150.dp)) {
                 AsyncImage(
-                    model = finalPetImageUrl,
+                    model = getHomeImageUrl(pet.image), // 💡 SỬA: Sửa lỗi dính chữ 'project-3images'
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                     contentScale = ContentScale.Crop,
-                    // THÊM: Ảnh mặc định thay thế để nhận biết xem Coil có đang xử lý vẽ UI hay không
                     placeholder = painterResource(id = R.drawable.ic_paw_print),
                     error = painterResource(id = R.drawable.ic_paw_print)
                 )
 
-                // Nút tim góc phải trên cùng
                 Box(
                     modifier = Modifier
                         .padding(10.dp)
@@ -511,7 +493,6 @@ fun FeaturedPetCard(pet: Pet, onClick: () -> Unit) {
                 }
             }
 
-            // Phần thông tin tách biệt ở dưới, không dùng padding-top ép cứng (tránh lỗi lệch layout)
             Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                 Text(
                     text = pet.name_pet ?: "Thú cưng",
@@ -530,9 +511,9 @@ fun FeaturedPetCard(pet: Pet, onClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun EventCard(event: EventModel) {
-    val context = LocalContext.current
     Card(
         modifier = Modifier.width(240.dp),
         shape = RoundedCornerShape(16.dp),
@@ -541,10 +522,12 @@ fun EventCard(event: EventModel) {
     ) {
         Column {
             AsyncImage(
-                model = event.image_url ?: R.drawable.ic_paw_print,
+                model = getHomeImageUrl(event.image_url), // 💡 SỬA: Sửa lỗi thiếu domain cho link '/uploads/articles/...'
                 contentDescription = null,
                 modifier = Modifier.fillMaxWidth().height(110.dp).clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.ic_paw_print),
+                error = painterResource(id = R.drawable.ic_paw_print)
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(text = event.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
@@ -553,7 +536,7 @@ fun EventCard(event: EventModel) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
-                    onClick = { /* Gọi hàm đặt lịch thông báo sự kiện nếu cần */ },
+                    onClick = { },
                     modifier = Modifier.fillMaxWidth().height(32.dp),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFDECE3), contentColor = Color(0xFF8D4000)),

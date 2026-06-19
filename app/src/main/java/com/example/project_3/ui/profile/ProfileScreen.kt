@@ -1,6 +1,7 @@
 package com.example.project_3.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,27 +20,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.project_3.R
 import com.example.project_3.data.local.SessionManager
 import com.example.project_3.viewmodel.ProfileViewModel
 import com.example.project_3.viewmodel.factory.ProfileViewModelFactory
+
+// 🔥 HÀM HELPER: Kiểm tra và chuẩn hóa đường dẫn Avatar cho Profile, ưu tiên ảnh Drawable mặc định
+fun getProfileAvatarUrl(avatarPath: String?): Any {
+    if (avatarPath.isNullOrEmpty() || avatarPath == "default" || avatarPath == "null" || avatarPath.contains("default.png")) {
+        return R.drawable.ic_default_avatar
+    }
+
+    val baseUrl = "http://10.0.2.2/project-3"
+
+    return when {
+        avatarPath.startsWith("/uploads") -> "$baseUrl$avatarPath"
+        avatarPath.startsWith("uploads") -> "$baseUrl/$avatarPath"
+        else -> if (avatarPath.startsWith("/")) "$baseUrl/uploads$avatarPath" else "$baseUrl/uploads/$avatarPath"
+    }
+}
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(SessionManager(LocalContext.current)))
 ) {
-    // Đọc trạng thái dữ liệu người dùng và trạng thái loading từ ViewModel
     val user = viewModel.user
     val isLoading = viewModel.isLoading
 
     val context = LocalContext.current
-    val baseUrl = "http://10.0.2.2/project-3/uploads"
+
     LaunchedEffect(navController.currentBackStackEntry) {
         viewModel.refreshUser()
     }
@@ -63,15 +80,53 @@ fun ProfileScreen(
                         .padding(vertical = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AsyncImage(
-                        model = "$baseUrl${user?.avatar ?: "/avatars/default.png"}",
-                        contentDescription = null,
+
+                    // 💡 CẬP NHẬT: Bao bọc Avatar bằng Box để xếp chồng nút Đổi ảnh lên trên góc nhỏ
+                    Box(
                         modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                        contentScale = ContentScale.Crop
-                    )
+                            .size(106.dp) // Tăng nhẹ kích thước bọc ngoài để tránh bị cắt lẹm nút camera
+                            .clickable {
+                                // Xử lý mở Image Picker tại đây hoặc điều hướng sang màn hình chỉnh sửa
+                                navController.navigate("edit_profile")
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Ảnh đại diện chính
+                        AsyncImage(
+                            model = getProfileAvatarUrl(user?.avatar),
+                            contentDescription = "User Avatar",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .border(2.dp, Color(0xFFFDECE3), CircleShape),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_default_avatar),
+                            error = painterResource(id = R.drawable.ic_default_avatar)
+                        )
+
+                        // 📸 NÚT ĐỔI ẢNH (Góc dưới bên phải)
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .background(Color(0xFF8D4000), CircleShape)
+                                .border(2.dp, Color.White, CircleShape)
+                                .align(Alignment.BottomEnd)
+                                .clickable {
+                                    // Xử lý mở Image Picker giống hệt như bấm vào avatar
+                                    navController.navigate("edit_profile")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change Avatar",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+
                     Spacer(Modifier.height(12.dp))
                     Text(
                         text = user?.fullname ?: "Người dùng",
@@ -99,15 +154,13 @@ fun ProfileScreen(
                 // --- 3. CÁC MỤC LINK ĐIỀU HƯỚNG ---
                 SectionTitle("Hoạt động của tôi")
                 ProfileLinkItem(Icons.Default.FavoriteBorder, "Thú cưng đang theo dõi", Color(0xFF80DEEA)) {
-                    navController.navigate("favorite_pets") // <-- Đổi tên route cho rõ nghĩa
+                    navController.navigate("favorite_pets")
                 }
 
-                // ĐÃ MỞ RỘNG: Bấm vào đây để chuyển sang màn hình Lịch sử nhận nuôi
                 ProfileLinkItem(Icons.Default.History, "Lịch sử nhận nuôi", Color(0xFFFFCC80)) {
                     navController.navigate("adopt_history")
                 }
 
-                // THÊM MỚI TẠI ĐÂY: Mục Lịch sử bài viết của tôi
                 ProfileLinkItem(Icons.Default.ListAlt, "Lịch sử bài viết", Color(0xFFC5CAE9)) {
                     navController.navigate("post_history")
                 }
