@@ -22,39 +22,36 @@ class LoginViewModel : ViewModel() {
     var navigateTo by mutableStateOf("")
         private set
 
+    // Thêm Context vào hàm login để khởi tạo SessionManager
     fun login(
+        context: android.content.Context, // <--- Thêm biến context ở đây
         username: String,
         password: String
     ) {
         viewModelScope.launch {
-
             try {
-
-                val response =
-                    repository.login(username, password)
+                val response = repository.login(username, password)
 
                 if (response.body()?.success == true) {
-
                     val user = response.body()?.user
 
-                    currentUser = user
+                    if (user != null) {
+                        // CÓ ĐOẠN NÀY: Khởi tạo SessionManager và lưu thông tin User lại
+                        val sessionManager = com.example.project_3.data.local.SessionManager(context)
+                        sessionManager.saveUser(user)
+                    }
 
+                    currentUser = user
                     message = "Login Success"
 
                     when(user?.role) {
                         "admin" -> navigateTo = "admin"
                         "user" -> navigateTo = "user"
                     }
-
                 } else {
-
-                    message =
-                        response.body()?.message
-                            ?: "Login Failed"
+                    message = response.body()?.message ?: "Login Failed"
                 }
-
             } catch (e: Exception) {
-
                 message = e.message.toString()
             }
         }

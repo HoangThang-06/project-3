@@ -205,7 +205,10 @@ fun LoginScreen(
             // LOGIN BUTTON
             // =========================
             Button(
-                onClick = { loginViewModel.login(emailOrUser, password) },
+                onClick = {
+                    // TRUYỀN THÊM context VÀO ĐẦU HÀM:
+                    loginViewModel.login(context, emailOrUser, password)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

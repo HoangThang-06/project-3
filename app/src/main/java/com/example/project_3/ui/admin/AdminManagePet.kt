@@ -27,9 +27,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.SubcomposeAsyncImage
+import com.example.project_3.data.local.SessionManager
 import com.example.project_3.data.model.Pet
 import com.example.project_3.viewmodel.AdminManagePetViewModel
-
+import androidx.compose.ui.graphics.vector.ImageVector
 
 const val BASE_SERVER_URL = "http://10.0.2.2/project-3/"
 val BackgroundColor = Color(0xFFFDF8F5)
@@ -49,6 +50,11 @@ fun AdminManagePet(
     navController: NavController,
     viewModel: AdminManagePetViewModel = viewModel()
 ) {
+    // 1. Khởi tạo SessionManager và lấy dữ liệu Admin đã lưu từ phiên đăng nhập trước đó
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val currentAdmin = remember { sessionManager.getUser() }
+
     val petList by viewModel.filteredPets.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -62,8 +68,30 @@ fun AdminManagePet(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor),
                 title = { Text("Paws & Hearts", color = PrimaryColor, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { }) { Icon(Icons.Default.Notifications, contentDescription = null, tint = OnSurfaceVariant) }
-                    Box(modifier = Modifier.size(32.dp).background(PrimaryFixed, CircleShape).clip(CircleShape), contentAlignment = Alignment.Center) {
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Default.Notifications, contentDescription = null, tint = OnSurfaceVariant)
+                    }
+
+                    // 2. CẬP NHẬT: Nhấn vào Box ảnh đại diện để lấy ID thực tế và chuyển sang tab Admin Profile
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(PrimaryFixed, CircleShape)
+                            .clip(CircleShape)
+                            .clickable {
+                                val adminIdStr = currentAdmin?.id_user?.toString() ?: ""
+
+                                if (adminIdStr.isNotEmpty()) {
+                                    // Chuyển hướng khớp với cấu hình route: "admin_profile/{adminId}"
+                                    navController.navigate("admin_profile/$adminIdStr") {
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Không tìm thấy thông tin phiên đăng nhập của Admin", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryColor)
                     }
                     Spacer(modifier = Modifier.width(16.dp))
@@ -72,16 +100,23 @@ fun AdminManagePet(
         },
         bottomBar = {
             val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-            NavigationBar(containerColor = SurfaceContainerLowest, tonalElevation = 8.dp) {
+
+            NavigationBar(
+                containerColor = SurfaceContainerLowest,
+                tonalElevation = 8.dp
+            ) {
+                // Sử dụng Triple (Tên hiển thị, Route, Biểu tượng)
                 val items = listOf(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
                     Triple("Apps", "admin_adopt", Icons.Default.Menu),
-                    Triple("Social", "admin_social", Icons.Default.Share)
+                    Triple("Social", "admin_social", Icons.Default.Share),
+                    Triple("Users", "admin_manage_user", Icons.Default.People)
                 )
+
                 items.forEach { (title, route, icon) ->
                     NavigationBarItem(
-                        selected = currentRoute == route,
+                        selected = currentRoute?.startsWith(route) == true,
                         onClick = {
                             if (currentRoute != route) {
                                 navController.navigate(route) {
@@ -91,14 +126,24 @@ fun AdminManagePet(
                                 }
                             }
                         },
-                        icon = { Icon(icon, contentDescription = title) },
-                        label = { Text(title, fontSize = 10.sp) },
+                        icon = {
+                            Icon(
+                                imageVector = icon, // compiler tự hiểu icon là ImageVector từ Triple
+                                contentDescription = title
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = title,
+                                fontSize = 10.sp
+                            )
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = OnPrimaryContainer,
                             selectedTextColor = Color(0xFF1B1C1C),
                             indicatorColor = PrimaryContainer.copy(alpha = 0.4f),
-                            unselectedIconColor = OnSurfaceVariant,
-                            unselectedTextColor = OnSurfaceVariant
+                            unselectedIconColor = Color(0xFF564338),
+                            unselectedTextColor = Color(0xFF564338)
                         )
                     )
                 }
@@ -187,7 +232,6 @@ fun AdminManagePet(
                         }
                     }
                 } else {
-                    // ĐÃ CẬP NHẬT: Nhấn vào item hoặc nút quản lý đều kích hoạt lưu dữ liệu và chuyển vùng điều hướng
                     items(petList) { pet ->
                         PetRowCard(
                             pet = pet,
@@ -223,7 +267,7 @@ fun PetRowCard(
         modifier = Modifier
             .fillMaxWidth()
             .background(SurfaceContainerLowest, RoundedCornerShape(16.dp))
-            .clickable { onPetClick() } // GIẢI PHÁP: Giúp toàn bộ vùng hàng ngang này nhận diện sự kiện click
+            .clickable { onPetClick() }
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {

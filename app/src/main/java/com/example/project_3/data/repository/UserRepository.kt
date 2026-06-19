@@ -33,6 +33,18 @@ class UserRepository {
     // USER
     // =========================
 
+    // Thay vì dùng apiService.updateProfile, hãy chuyển sang dùng cấu trúc RetrofitClient của dự án
+    suspend fun updateAdminProfile(
+        idUser: Int,
+        fullname: String,
+        phone: String,
+        birthday: String,
+        gender: String,
+        address: String,
+        email: String
+    ): UserResponse {
+        return RetrofitClient.api.updateProfile(idUser, fullname, phone, birthday, gender, address, email)
+    }
     suspend fun getUser(
         idUser: String
     ): UserResponse {
@@ -50,37 +62,7 @@ class UserRepository {
     suspend fun deleteUser(
         idUser: String
     ): UserResponse {
-
         return RetrofitClient.api.deleteUser(idUser)
-    }
-
-    suspend fun updateUser(
-
-        idUser: String,
-        username: String,
-        fullname: String,
-        phone: String,
-        birthday: String,
-        gender: String,
-        address: String,
-        avatar: String,
-        email: String,
-        status: String
-
-    ): UserResponse {
-
-        return RetrofitClient.api.updateUser(
-            idUser,
-            username,
-            fullname,
-            phone,
-            birthday,
-            gender,
-            address,
-            avatar,
-            email,
-            status
-        )
     }
 
     suspend fun resetPassword(

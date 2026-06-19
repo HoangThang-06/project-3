@@ -80,11 +80,12 @@ fun AdminAdopt(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
                     Triple("Apps", "admin_adopt", Icons.Default.Menu),
-                    Triple("Social", "admin_social", Icons.Default.Share)
+                    Triple("Social", "admin_social", Icons.Default.Share),
+                    Triple("Users", "admin_manage_user", Icons.Default.People) // Thêm ở đây
                 )
                 items.forEach { (title, route, icon) ->
                     NavigationBarItem(
-                        selected = currentRoute == route,
+                        selected = currentRoute?.startsWith(route) == true,
                         onClick = {
                             if (currentRoute != route) {
                                 navController.navigate(route) {

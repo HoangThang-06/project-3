@@ -38,7 +38,7 @@ fun PetDetailScreen(
 ) {
     val context = LocalContext.current
 
-    // 💡 Lấy thông tin user hiện tại từ SessionManager để phục vụ tính năng nhận nuôi
+    // Lấy thông tin user hiện tại từ SessionManager
     val sessionManager = remember { SessionManager(context) }
     val currentUserId = sessionManager.getUserId()
 
@@ -49,7 +49,7 @@ fun PetDetailScreen(
 
     val pet = viewModel.petDetail
 
-    // 🔥 Sửa triệt để lỗi đường dẫn: Đổi dấu gạch ngang thành gạch dưới và xóa chữ thừa phía sau
+    // Sửa triệt để lỗi đường dẫn: Đổi dấu gạch ngang thành gạch dưới và xóa chữ thừa phía sau
     val baseUrl = "http://10.0.2.2/project_3"
 
     if (pet == null) {
@@ -182,7 +182,7 @@ fun PetDetailScreen(
 
                     Spacer(Modifier.width(16.dp))
 
-                    // 🔥 NÚT BẤM ĐÃ ĐƯỢC KẾT NỐI VỚI LOGIC SUBMIT ADOPTION
+                    // NÚT BẤM ĐÃ ĐƯỢC TẠM ẨN CHỨC NĂNG GỌI API ĐĂNG KÝ
                     Button(
                         onClick = {
                             if (currentUserId == -1) {
@@ -190,30 +190,18 @@ fun PetDetailScreen(
                             } else if (pet.state != "available") {
                                 Toast.makeText(context, "Bé thú cưng này hiện không thể nhận nuôi!", Toast.LENGTH_SHORT).show()
                             } else {
-                                // Gọi hàm gửi request đăng ký nhận nuôi lên PHP Server
-                                viewModel.submitAdoption(
-                                    userId = currentUserId,
-                                    petId = pet.id_pet,
-                                    onResult = { serverMessage ->
-                                        // Nhận phản hồi từ file PHP và thông báo lên UI
-                                        Toast.makeText(context, serverMessage, Toast.LENGTH_LONG).show()
-                                    }
-                                )
+                                // Tạm thời thông báo nhanh trên UI, không gọi API nhận nuôi nữa
+                                Toast.makeText(context, "Chức năng đăng ký nhận nuôi đang được bảo trì!", Toast.LENGTH_LONG).show()
                             }
                         },
-                        // Vô hiệu hoá nút khi đang trong tiến trình xử lý để tránh người dùng nhấn lặp
-                        enabled = !viewModel.isSubmitting,
+                        enabled = true,
                         modifier = Modifier.weight(1f).height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8D4000)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        if (viewModel.isSubmitting) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                        } else {
-                            Icon(Icons.Default.Favorite, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Đăng ký nhận nuôi", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
+                        Icon(Icons.Default.Favorite, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Đăng ký nhận nuôi", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

@@ -2,7 +2,6 @@ package com.example.project_3.data.remote
 
 import com.example.project_3.data.model.AddCommentResponse
 import com.example.project_3.data.model.AdoptionRequest
-import com.example.project_3.data.model.AdoptionResponse
 import com.example.project_3.data.model.ArticleResponse
 import com.example.project_3.data.model.LoginResponse
 import com.example.project_3.data.model.PetResponse
@@ -108,35 +107,20 @@ interface ApiService {
     // 3. USER & PROFILE APIs (Hồ sơ người dùng)
     // ==========================================
 
-    @GET("user/get_user.php")
+    @GET("user/get_user_profile.php")
     suspend fun getUser(
         @Query("id_user") idUser: String
     ): UserResponse
 
     @GET("user/get_all_users.php")
     suspend fun getAllUsers(
-        @Query("current_user_id") currentUserId: String
+        @Query("currentUserId") currentUserId: String // Đổi "current_user_id" thành "currentUserId"
     ): UserResponse
 
     @FormUrlEncoded
     @POST("user/delete_user.php")
     suspend fun deleteUser(
         @Field("id_user") idUser: String
-    ): UserResponse
-
-    @FormUrlEncoded
-    @POST("user/update_user.php")
-    suspend fun updateUser(
-        @Field("id_user") idUser: String,
-        @Field("username") username: String,
-        @Field("fullname") fullname: String,
-        @Field("phone") phone: String,
-        @Field("birthday") birthday: String,
-        @Field("gender") gender: String,
-        @Field("address") address: String,
-        @Field("avatar") avatar: String,
-        @Field("email") email: String,
-        @Field("status") status: String
     ): UserResponse
 
     @FormUrlEncoded
@@ -199,7 +183,7 @@ interface ApiService {
 
     // 3. API Xóa bài báo khỏi hệ thống (Đồng thời xóa like & comment liên quan)
     @FormUrlEncoded
-    @POST("delete_article.php")
+    @POST("delete_article.php") // Sửa lại đúng tên file PHP xóa của bạn
     suspend fun deleteArticle(
         @Field("id_article") idArticle: Int
     ): BaseResponse
@@ -273,7 +257,6 @@ interface ApiService {
         @Part image: MultipartBody.Part?
     ): BaseResponse
 
-<<<<<<< HEAD
     @GET("get_home_data.php")
     suspend fun getHomeData(): HomeResponse
 
@@ -286,7 +269,6 @@ interface ApiService {
     suspend fun registerAdoption(
         @Body request: AdoptionRequest
     ): AdoptionResponse
-=======
     //adoption
     // Gọi đến api số 1
     @GET("adoption/get_all_requests.php")
@@ -306,5 +288,4 @@ interface ApiService {
     suspend fun approveRequest(
         @Field("id") id: Int
     ): CommonResponse
->>>>>>> d1deb52932fa474fa7903bc41a441996ba4a5ce1
 }

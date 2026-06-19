@@ -103,6 +103,7 @@ fun AdminDashboard(
                     val icon: ImageVector
                 )
 
+                // Bổ sung thêm mục "Users" vào danh sách dưới đây
                 val items = listOf(
                     BottomItem(
                         title = "Dash",
@@ -123,6 +124,11 @@ fun AdminDashboard(
                         title = "Social",
                         route = "admin_social",
                         icon = Icons.Default.Share
+                    ),
+                    BottomItem(
+                        title = "Users",                // Tên hiển thị trên thanh bar
+                        route = "admin_manage_user",    // Route điều hướng khớp với NavHost
+                        icon = Icons.Default.People     // Biểu tượng đại diện cho nhóm người dùng
                     )
                 )
 

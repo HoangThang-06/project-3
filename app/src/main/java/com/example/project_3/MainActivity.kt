@@ -25,7 +25,9 @@ import com.example.project_3.ui.theme.Project3Theme
 import com.example.project_3.ui.admin.*
 import com.example.project_3.viewmodel.AdminManagePetViewModel
 import com.example.project_3.viewmodel.AdminManageArticleViewModel
-
+import com.example.project_3.viewmodel.AdminProfileViewModel
+import com.example.project_3.viewmodel.AdminManageUserViewModel
+import com.example.project_3.ui.admin.AdminManageUserScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,10 +44,11 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Khởi tạo các ViewModel dùng chung ở tầng Navigation để chia sẻ dữ liệu
+    // Khởi tạo các ViewModel dùng chung ở tầng Navigation để chia sẻ dữ liệu giữa các màn hình quản lý
     val adminManagePetViewModel: AdminManagePetViewModel = viewModel()
     val adminManageArticleViewModel: AdminManageArticleViewModel = viewModel()
-
+    val adminProfileViewModel: AdminProfileViewModel = viewModel()
+    val adminManageUserViewModel: AdminManageUserViewModel = viewModel()
     NavHost(
         navController = navController,
         startDestination = "login",
@@ -125,12 +128,10 @@ fun AppNavigation() {
                 navController = navController,
                 viewModel = adminManageArticleViewModel,
                 onEditArticleClick = { article ->
-                    // ĐÃ SỬA: Khi click sửa bài viết, thực hiện chuyển màn hình chi tiết bài viết
-                    navController.navigate("admin_article_detail")
+                    // Code điều hướng sửa bài viết của bạn tại đây...
                 },
                 onAddArticleClick = {
-                    // ĐÃ SỬA: Điều hướng đến màn hình thêm bài viết (nếu bạn có route này)
-                    navController.navigate("admin_add_article")
+                    // Code điều hướng thêm bài viết của bạn tại đây...
                 }
             )
         }
@@ -148,6 +149,45 @@ fun AppNavigation() {
             } else {
                 navController.popBackStack()
             }
+        }
+
+        composable(
+            route = "admin_profile/{adminId}",
+            arguments = listOf(
+                navArgument("adminId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val adminId = backStackEntry.arguments?.getString("adminId") ?: ""
+
+            AdminProfileScreen(
+                currentAdminId = adminId,
+                navController = navController,
+                viewModel = adminProfileViewModel // Lúc này nó sẽ lấy từ biến dùng chung ở đầu hàm
+            )
+        }
+
+        composable(
+            route = "admin_edit_profile/{adminId}",
+            arguments = listOf(
+                navArgument("adminId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val adminId = backStackEntry.arguments?.getString("adminId") ?: ""
+            EditAdminProfileScreen(
+                adminId = adminId,
+                navController = navController,
+                viewModel = adminProfileViewModel
+            )
+        }
+
+        // Đổi từ adminId = adminId thành currentUserId = adminId để khớp định nghĩa hàm
+        // Thay đổi route thành dạng tham số tùy chọn (dùng dấu chấm hỏi ?adminId={adminId})
+        composable(route = "admin_manage_user") {
+            AdminManageUserScreen(
+                currentUserId = "", // Truyền chuỗi rỗng thoải mái vì bên trong Screen đã tự lấy từ Session
+                navController = navController,
+                viewModel = adminManageUserViewModel
+            )
         }
 
         // ====================================================

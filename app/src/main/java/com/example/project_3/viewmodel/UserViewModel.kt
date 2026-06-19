@@ -142,65 +142,6 @@ class UserViewModel : ViewModel() {
     }
 
     // =========================
-    // UPDATE USER
-    // =========================
-
-    fun updateUser(
-
-        idUser: String,
-        username: String,
-        fullname: String,
-        phone: String,
-        birthday: String,
-        gender: String,
-        address: String,
-        avatar: String,
-        email: String,
-        status: String
-
-    ) {
-
-        viewModelScope.launch {
-
-            try {
-
-                isLoading.value = true
-
-                val response =
-                    repository.updateUser(
-                        idUser,
-                        username,
-                        fullname,
-                        phone,
-                        birthday,
-                        gender,
-                        address,
-                        avatar,
-                        email,
-                        status
-                    )
-
-                message.value =
-                    response.message ?: ""
-
-                if (response.success) {
-
-                    getUser(idUser)
-                }
-
-            } catch (e: Exception) {
-
-                message.value =
-                    e.message ?: "Update failed"
-
-            } finally {
-
-                isLoading.value = false
-            }
-        }
-    }
-
-    // =========================
     // RESET PASSWORD
     // =========================
 

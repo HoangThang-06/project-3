@@ -31,6 +31,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.example.project_3.data.model.Article
 import com.example.project_3.viewmodel.AdminManageArticleViewModel
 
+// Định nghĩa màu sắc Token UI đồng bộ hệ thống Admin
 val AdminSecondaryColor = Color(0xFF006A65)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,8 +43,8 @@ fun AdminSocial(
     onAddArticleClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val articles = viewModel.articleList
-    val isLoading by viewModel.isLoading
+    val articles = viewModel.uiState.collectAsState().value.articles
+    val isLoading = viewModel.uiState.collectAsState().value.isLoading
     val messageNotification by viewModel.messageNotification
 
     var selectedFilter by remember { mutableStateOf("Tất cả") }
@@ -85,11 +86,12 @@ fun AdminSocial(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
                     Triple("Apps", "admin_adopt", Icons.Default.Menu),
-                    Triple("Social", "admin_social", Icons.Default.Share)
+                    Triple("Social", "admin_social", Icons.Default.Share),
+                    Triple("Users", "admin_manage_user", Icons.Default.People) // Thêm ở đây
                 )
                 items.forEach { (title, route, icon) ->
                     NavigationBarItem(
-                        selected = currentRoute == route,
+                        selected = currentRoute?.startsWith(route) == true,
                         onClick = {
                             if (currentRoute != route) {
                                 navController.navigate(route) {
@@ -193,16 +195,8 @@ fun AdminSocial(
                                 onEditArticleClick(article)
                             },
                             onToggleStatus = {
-                                // Thay đổi qua lại giữa public và private
-                                val nextStatus = if (article.status == "public") "private" else "public"
-                                viewModel.updateArticleContent(
-                                    idArticle = article.id_article,
-                                    title = article.title,
-                                    content = article.content,
-                                    image = article.image,
-                                    category = article.category,
-                                    status = nextStatus
-                                )
+                                // ĐÃ SỬA: Gọi đúng hàm updateArticleStatus với 2 tham số khớp với ViewModel của bạn
+                                viewModel.updateArticleStatus(article.id_article, article.status)
                             },
                             onDelete = {
                                 viewModel.deleteArticle(article.id_article)
@@ -235,7 +229,6 @@ fun ArticleRowCard(
     onToggleStatus: () -> Unit,
     onDelete: () -> Unit
 ) {
-    // Đã đồng bộ trạng thái ẩn dựa trên trường status từ Database của bạn
     val isPrivate = article.status == "private"
 
     val fullImageUrl = if (article.image.startsWith("images/") || article.image.startsWith("http")) {
@@ -311,7 +304,7 @@ fun ArticleRowCard(
         ) {
             Column {
                 Text(
-                    text = article.title, // Hiển thị Tiêu đề bài viết từ Database
+                    text = article.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isPrivate) OnSurfaceVariant else OnSurface,
@@ -319,7 +312,7 @@ fun ArticleRowCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = article.content, // Nội dung tóm tắt ngắn
+                    text = article.content,
                     fontSize = 13.sp,
                     color = OnSurfaceVariant,
                     maxLines = 1,
@@ -338,10 +331,12 @@ fun ArticleRowCard(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp), tint = AdminSecondaryColor)
-                        Text(text = "${article.click} lượt xem", fontSize = 12.sp, color = OnSurfaceVariant)
+                        Text(text = "${article.click} xem", fontSize = 12.sp, color = OnSurfaceVariant)
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
