@@ -1,4 +1,4 @@
-package com.example.project_3.ui.adopt
+package com.example.project_3.ui.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -21,13 +21,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.project_3.data.local.SessionManager
-import com.example.project_3.viewmodel.PetViewModel
+import com.example.project_3.viewmodel.FavoriteScreenViewModel
+
+// SỬA TẠI ĐÂY: Import chính xác component PetCardDynamic từ file AdoptScreen
+import com.example.project_3.ui.adopt.PetCardDynamic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteScreen(
     navController: NavController,
-    petViewModel: PetViewModel = viewModel()
+    favoriteViewModel: FavoriteScreenViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
@@ -36,13 +39,14 @@ fun FavoriteScreen(
     // Tự động tải danh sách thú cưng yêu thích khi mở màn hình
     LaunchedEffect(currentUserId) {
         if (currentUserId != -1) {
-            petViewModel.fetchFavoritePets(currentUserId)
+            favoriteViewModel.fetchFavoritePets(currentUserId)
         }
     }
 
-    val petList = petViewModel.petList
-    val isLoading = petViewModel.isLoading.value
-    val errorMessage = petViewModel.errorMessage.value
+    // Liên kết các biến dữ liệu từ ViewModel mới sang Giao diện
+    val petList = favoriteViewModel.petList
+    val isLoading = favoriteViewModel.isLoading.value
+    val errorMessage = favoriteViewModel.errorMessage.value
 
     Scaffold(
         topBar = {
@@ -70,7 +74,6 @@ fun FavoriteScreen(
                     color = Color(0xFFFD8C45)
                 )
             } else if (petList.isEmpty()) {
-                // Hiển thị thông báo nếu danh sách trống
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
@@ -95,18 +98,18 @@ fun FavoriteScreen(
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
                     items(petList) { pet ->
+                        // Đã giữ nguyên PetCardDynamic khớp hoàn toàn với file của bạn
                         PetCardDynamic(
                             pet = pet,
                             onClickCard = {
                                 navController.navigate("pet_detail/${pet.id_pet}")
                             },
                             onFollowClick = {
-                                // Xử lý hủy theo dõi trực tiếp tại trang này
-                                petViewModel.followPet(currentUserId, pet.id_pet)
+                                // Xử lý gọi hàm hủy theo dõi từ ViewModel mới
+                                favoriteViewModel.followPet(currentUserId, pet.id_pet)
 
-                                // Vì đây là trang danh sách yêu thích, khi bỏ chọn tim
-                                // chúng ta có thể xóa luôn chú pet đó khỏi danh sách hiển thị tạm thời
-                                petViewModel.petList.remove(pet)
+                                // Xóa cục bộ trên UI để cập nhật danh sách lập tức
+                                favoriteViewModel.petList.remove(pet)
 
                                 Toast.makeText(
                                     context,
@@ -119,7 +122,6 @@ fun FavoriteScreen(
                 }
             }
 
-            // Hiển thị lỗi nếu có
             if (errorMessage.isNotEmpty() && petList.isEmpty()) {
                 Text(
                     text = errorMessage,

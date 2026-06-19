@@ -30,6 +30,10 @@ import com.example.project_3.viewmodel.PetDetailViewModel
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Female
 
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 @Composable
 fun PetDetailScreen(
     idPet: Int,
@@ -49,20 +53,18 @@ fun PetDetailScreen(
 
     val pet = viewModel.petDetail
 
-    // Sửa triệt để lỗi đường dẫn: Đổi dấu gạch ngang thành gạch dưới và xóa chữ thừa phía sau
-    val baseUrl = "http://10.0.2.2/project_3"
-
     if (pet == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Color(0xFF8D4000))
         }
     } else {
-        // Tạo đường dẫn ảnh thông minh, tránh lỗi chồng chéo thư mục tương tự màn hình Adopt
+        // Chuẩn hóa đường dẫn ảnh động chuẩn xác khớp với cấu trúc thư mục XAMPP backend
         val fullImageUrl = remember(pet.image) {
-            if (pet.image.startsWith("/images/")) {
-                "$baseUrl/upload${pet.image}"
-            } else {
-                "$baseUrl${pet.image}"
+            val imagePath = pet.image ?: ""
+            when {
+                imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
+                imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
+                else -> "http://10.0.2.2/project-3/images/$imagePath"
             }
         }
 
@@ -161,7 +163,7 @@ fun PetDetailScreen(
                         HealthCard(Modifier.weight(1f), Icons.Default.VerifiedUser, "Tiêm ngừa", "Đầy đủ các mũi")
                     }
                 }
-                Spacer(Modifier.height(100.dp)) // Chừa chỗ cho nút dưới cùng
+                Spacer(Modifier.height(100.dp))
             }
 
             // --- 4. BOTTOM ACTION BAR ---
@@ -182,7 +184,8 @@ fun PetDetailScreen(
 
                     Spacer(Modifier.width(16.dp))
 
-                    // NÚT BẤM ĐÃ ĐƯỢC TẠM ẨN CHỨC NĂNG GỌI API ĐĂNG KÝ
+                    // ... (Các đoạn mã giao diện phía trên giữ nguyên không đổi)
+
                     Button(
                         onClick = {
                             if (currentUserId == -1) {
@@ -190,18 +193,43 @@ fun PetDetailScreen(
                             } else if (pet.state != "available") {
                                 Toast.makeText(context, "Bé thú cưng này hiện không thể nhận nuôi!", Toast.LENGTH_SHORT).show()
                             } else {
-                                // Tạm thời thông báo nhanh trên UI, không gọi API nhận nuôi nữa
-                                Toast.makeText(context, "Chức năng đăng ký nhận nuôi đang được bảo trì!", Toast.LENGTH_LONG).show()
+                                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                val todayAsString = sdf.format(Date())
+
+                                // Đóng gói cấu trúc Map động chứa chính xác 2 từ khóa mà backend PHP yêu cầu
+                                val requestMap = mapOf(
+                                    "id_user" to currentUserId,         // Kiểu Int (Ví dụ: 1)
+                                    "id_pet" to pet.id_pet,             // Kiểu Int (Ví dụ: 12)
+                                    "user_name" to "User_$currentUserId",
+                                    "email" to "user$currentUserId@example.com",
+                                    "name_pet" to pet.name_pet,
+                                    "species" to (pet.species ?: ""),
+                                    "age" to pet.age.toString(),
+                                    "adoption_date" to todayAsString,
+                                    "state" to "pending"
+                                )
+
+                                // Gọi hàm xử lý trung gian qua Gson động mới cập nhật ở trên
+                                viewModel.registerAdoptionDynamic(requestMap) { isSuccess, msg ->
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                    if (isSuccess) {
+                                        navController.popBackStack()
+                                    }
+                                }
                             }
                         },
-                        enabled = true,
+                        enabled = !viewModel.isSubmitting,
                         modifier = Modifier.weight(1f).height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8D4000)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Favorite, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Đăng ký nhận nuôi", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        if (viewModel.isSubmitting) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Icon(Icons.Default.Favorite, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Đăng ký nhận nuôi", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

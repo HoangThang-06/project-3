@@ -13,7 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.project_3.ui.adopt.FavoriteScreen
+import com.example.project_3.ui.profile.FavoriteScreen
 import com.example.project_3.ui.auth.LoginScreen
 import com.example.project_3.ui.auth.RegisterScreen
 import com.example.project_3.ui.home.HomeScreen

@@ -128,17 +128,29 @@ fun PetCardDynamic(
     onClickCard: () -> Unit,
     onFollowClick: () -> Unit
 ) {
+    // TỰ ĐỘNG CHUẨN HÓA ĐƯỜNG DẪN ẢNH:
+    // Ngăn chặn việc sai sót chuỗi dù database lưu chỉ tên file (abc.png) hay kèm thư mục (images/abc.png)
+    val imageUrl = remember(pet.image) {
+        val imagePath = pet.image ?: ""
+        when {
+            imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
+            imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
+            else -> "http://10.0.2.2/project-3/images/$imagePath"
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClickCard() }, // Đã sửa: Click vào card chỉ xem chi tiết
+            .clickable { onClickCard() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp)) {
+            // ĐÃ CẬP NHẬT: Sử dụng biến imageUrl đã qua xử lý logic thông minh
             AsyncImage(
-                model = "http://10.0.2.2/project-3${pet.image}",
+                model = imageUrl,
                 contentDescription = pet.name_pet,
                 modifier = Modifier
                     .size(100.dp)

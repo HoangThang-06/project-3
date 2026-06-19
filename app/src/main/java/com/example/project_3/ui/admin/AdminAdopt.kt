@@ -26,7 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.project_3.viewmodel.AdminAdoptViewModel
 
-private object AdoptColors {
+private object AdminAdoptColors {
     val OrangePrimary = Color(0xFF9B4500)
     val PrimaryContainer = Color(0xFFFF8C42)
     val OnPrimaryContainer = Color(0xFF6A2D00)
@@ -51,7 +51,7 @@ fun AdminAdopt(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        containerColor = AdoptColors.BackgroundColor,
+        containerColor = AdminAdoptColors.BackgroundColor,
         topBar = {
             TopAppBar(
                 title = {
@@ -59,23 +59,23 @@ fun AdminAdopt(
                         text = "Duyệt Đơn Nhận Nuôi",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AdoptColors.OrangePrimary
+                        color = AdminAdoptColors.OrangePrimary
                     )
                 },
                 actions = {
                     IconButton(onClick = { /* Xử lý thông báo nếu cần */ }) {
-                        Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = AdoptColors.OnSurfaceVariant)
+                        Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = AdminAdoptColors.OnSurfaceVariant)
                     }
                     Box(modifier = Modifier.padding(end = 16.dp).size(32.dp).clip(CircleShape).background(Color.LightGray)) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "Admin Profile", modifier = Modifier.fillMaxSize())
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = AdoptColors.BackgroundColor)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = AdminAdoptColors.BackgroundColor)
             )
         },
         bottomBar = {
             val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-            NavigationBar(containerColor = AdoptColors.SurfaceContainerLowest, tonalElevation = 8.dp) {
+            NavigationBar(containerColor = AdminAdoptColors.SurfaceContainerLowest, tonalElevation = 8.dp) {
                 val items = listOf(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
@@ -98,11 +98,11 @@ fun AdminAdopt(
                         icon = { Icon(imageVector = icon, contentDescription = title) },
                         label = { Text(text = title, fontSize = 10.sp) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = AdoptColors.OnPrimaryContainer,
+                            selectedIconColor = AdminAdoptColors.OnPrimaryContainer,
                             selectedTextColor = Color(0xFF1B1C1C),
-                            indicatorColor = AdoptColors.PrimaryContainer.copy(alpha = 0.4f),
-                            unselectedIconColor = AdoptColors.OnSurfaceVariant,
-                            unselectedTextColor = AdoptColors.OnSurfaceVariant
+                            indicatorColor = AdminAdoptColors.PrimaryContainer.copy(alpha = 0.4f),
+                            unselectedIconColor = AdminAdoptColors.OnSurfaceVariant,
+                            unselectedTextColor = AdminAdoptColors.OnSurfaceVariant
                         )
                     )
                 }
@@ -112,7 +112,7 @@ fun AdminAdopt(
             FloatingActionButton(
                 // CẬP NHẬT: Đổi từ loadAdoptApplications() sang hàm fetchAdoptionRequests() chuẩn
                 onClick = { viewModel.fetchAdoptionRequests() },
-                containerColor = AdoptColors.OrangePrimary,
+                containerColor = AdminAdoptColors.OrangePrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -139,8 +139,8 @@ fun AdminAdopt(
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = CircleShape,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = AdoptColors.SurfaceContainer,
-                        unfocusedContainerColor = AdoptColors.SurfaceContainer,
+                        focusedContainerColor = AdminAdoptColors.SurfaceContainer,
+                        unfocusedContainerColor = AdminAdoptColors.SurfaceContainer,
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent
                     )
@@ -151,8 +151,8 @@ fun AdminAdopt(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "DANH SÁCH YÊU CẦU (${uiState.applications.size})", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B1C1C))
                     TextButton(onClick = { }, contentPadding = PaddingValues(0.dp)) {
-                        Text("Sắp xếp ", color = AdoptColors.OrangePrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        Icon(Icons.Default.Sort, contentDescription = "Sort", tint = AdoptColors.OrangePrimary, modifier = Modifier.size(14.dp))
+                        Text("Sắp xếp ", color = AdminAdoptColors.OrangePrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.Sort, contentDescription = "Sort", tint = AdminAdoptColors.OrangePrimary, modifier = Modifier.size(14.dp))
                     }
                 }
             }
@@ -161,7 +161,7 @@ fun AdminAdopt(
             if (uiState.isLoading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = AdoptColors.OrangePrimary)
+                        CircularProgressIndicator(color = AdminAdoptColors.OrangePrimary)
                     }
                 }
             }
@@ -170,10 +170,10 @@ fun AdminAdopt(
             if (uiState.errorMessage != null) {
                 item {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = uiState.errorMessage!!, color = AdoptColors.ErrorColor, fontSize = 14.sp, textAlign = TextAlign.Center)
+                        Text(text = uiState.errorMessage!!, color = AdminAdoptColors.ErrorColor, fontSize = 14.sp, textAlign = TextAlign.Center)
                         Spacer(modifier = Modifier.height(8.dp))
                         // CẬP NHẬT: Sửa hàm tải lại dữ liệu thích hợp
-                        Button(onClick = { viewModel.fetchAdoptionRequests() }, colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary)) {
+                        Button(onClick = { viewModel.fetchAdoptionRequests() }, colors = ButtonDefaults.buttonColors(containerColor = AdminAdoptColors.OrangePrimary)) {
                             Text("Thử tải lại dữ liệu")
                         }
                     }
@@ -196,17 +196,17 @@ fun AdminAdopt(
                                 Button(
                                     onClick = { viewModel.rejectApplication(application.id) }, // Truyền kiểu dữ liệu số Int chuẩn
                                     modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.SurfaceContainerLow),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AdminAdoptColors.SurfaceContainerLow),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Icon(Icons.Default.Close, contentDescription = "Reject", tint = AdoptColors.ErrorColor, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Close, contentDescription = "Reject", tint = AdminAdoptColors.ErrorColor, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Từ chối", color = AdoptColors.ErrorColor, fontWeight = FontWeight.Bold)
+                                    Text("Từ chối", color = AdminAdoptColors.ErrorColor, fontWeight = FontWeight.Bold)
                                 }
                                 Button(
                                     onClick = { viewModel.approveApplication(application) },
                                     modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = AdoptColors.OrangePrimary),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AdminAdoptColors.OrangePrimary),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Icon(Icons.Default.Check, contentDescription = "Approve", tint = Color.White, modifier = Modifier.size(18.dp))
@@ -221,7 +221,7 @@ fun AdminAdopt(
                                 "rejected" -> "Đơn yêu cầu này đã bị từ chối"
                                 else -> "Đơn đã xử lý: ${application.status}"
                             }
-                            val statusTextColor = if (application.status.lowercase() == "rejected") AdoptColors.ErrorColor else AdoptColors.SuccessColor
+                            val statusTextColor = if (application.status.lowercase() == "rejected") AdminAdoptColors.ErrorColor else AdminAdoptColors.SuccessColor
 
                             Text(
                                 text = statusText,
@@ -237,7 +237,7 @@ fun AdminAdopt(
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = AdoptColors.OrangePrimary)) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = AdminAdoptColors.OrangePrimary)) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -250,7 +250,7 @@ fun AdminAdopt(
                         LinearProgressIndicator(
                             progress = { uiState.todayProgress },
                             modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
-                            color = AdoptColors.SecondaryContainer,
+                            color = AdminAdoptColors.SecondaryContainer,
                             trackColor = Color.White.copy(alpha = 0.2f)
                         )
                     }
@@ -273,25 +273,25 @@ fun ApplicationCard(
 ) {
     // Đổi màu sắc của Badge trạng thái tùy chỉnh theo chuỗi string trả về
     val badgeBgColor = when (status.lowercase()) {
-        "pending" -> AdoptColors.OrangePrimary.copy(alpha = 0.15f)
-        "approved", "adopted" -> AdoptColors.SuccessColor.copy(alpha = 0.15f)
-        else -> AdoptColors.ErrorColor.copy(alpha = 0.15f)
+        "pending" -> AdminAdoptColors.OrangePrimary.copy(alpha = 0.15f)
+        "approved", "adopted" -> AdminAdoptColors.SuccessColor.copy(alpha = 0.15f)
+        else -> AdminAdoptColors.ErrorColor.copy(alpha = 0.15f)
     }
     val badgeTextColor = when (status.lowercase()) {
-        "pending" -> AdoptColors.OrangePrimary
-        "approved", "adopted" -> AdoptColors.SuccessColor
-        else -> AdoptColors.ErrorColor
+        "pending" -> AdminAdoptColors.OrangePrimary
+        "approved", "adopted" -> AdminAdoptColors.SuccessColor
+        else -> AdminAdoptColors.ErrorColor
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().border(1.dp, AdoptColors.OutlineVariant, RoundedCornerShape(12.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, AdminAdoptColors.OutlineVariant, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AdoptColors.SurfaceContainerLowest)
+        colors = CardDefaults.cardColors(containerColor = AdminAdoptColors.SurfaceContainerLowest)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)).background(Color.LightGray)) {
-                    Icon(Icons.Default.Person, contentDescription = "User Avatar", modifier = Modifier.fillMaxSize().padding(12.dp), tint = AdoptColors.OnSurfaceVariant)
+                    Icon(Icons.Default.Person, contentDescription = "User Avatar", modifier = Modifier.fillMaxSize().padding(12.dp), tint = AdminAdoptColors.OnSurfaceVariant)
                 }
 
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -303,14 +303,14 @@ fun ApplicationCard(
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.Pets, contentDescription = "Pet", tint = AdoptColors.OrangePrimary, modifier = Modifier.size(12.dp))
-                        Text(text = buildString { append(petName); append(" "); append("($petBreed)") }, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = AdoptColors.OrangePrimary)
+                        Icon(Icons.Default.Pets, contentDescription = "Pet", tint = AdminAdoptColors.OrangePrimary, modifier = Modifier.size(12.dp))
+                        Text(text = buildString { append(petName); append(" "); append("($petBreed)") }, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = AdminAdoptColors.OrangePrimary)
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
                         tags.forEach { (tagText, isSpecial) ->
-                            val bgTagColor = if (isSpecial) AdoptColors.SecondaryContainer.copy(alpha = 0.3f) else Color(0xFFE4E3DB)
-                            val txtTagColor = if (isSpecial) AdoptColors.OnSecondaryContainer else Color(0xFF474742)
+                            val bgTagColor = if (isSpecial) AdminAdoptColors.SecondaryContainer.copy(alpha = 0.3f) else Color(0xFFE4E3DB)
+                            val txtTagColor = if (isSpecial) AdminAdoptColors.OnSecondaryContainer else Color(0xFF474742)
                             Box(modifier = Modifier.background(bgTagColor, CircleShape).padding(horizontal = 8.dp, vertical = 2.dp)) {
                                 Text(tagText, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = txtTagColor)
                             }
@@ -320,8 +320,8 @@ fun ApplicationCard(
             }
 
             if (note != null) {
-                Box(modifier = Modifier.fillMaxWidth().background(AdoptColors.SurfaceContainerLow, RoundedCornerShape(8.dp)).padding(8.dp)) {
-                    Text(text = note, fontSize = 14.sp, fontStyle = FontStyle.Italic, color = AdoptColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Box(modifier = Modifier.fillMaxWidth().background(AdminAdoptColors.SurfaceContainerLow, RoundedCornerShape(8.dp)).padding(8.dp)) {
+                    Text(text = note, fontSize = 14.sp, fontStyle = FontStyle.Italic, color = AdminAdoptColors.OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
             actions()

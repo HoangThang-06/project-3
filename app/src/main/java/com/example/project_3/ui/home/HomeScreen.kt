@@ -1,6 +1,7 @@
 package com.example.project_3.ui.home
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -61,8 +62,7 @@ fun HomeScreen(
     val socialViewModel: SocialViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
 
-    // 💡 TỐI ƯU 1: Theo dõi trạng thái selectedItem. Mỗi khi người dùng chuyển đổi tab
-    // (ví dụ từ mạng xã hội Social quay lại Home), hệ thống sẽ chủ động kéo số liệu mới từ DB.
+    // Theo dõi trạng thái selectedItem để kéo số liệu mới từ DB
     LaunchedEffect(selectedItem) {
         homeViewModel.fetchNotifications(userId = 1)
     }
@@ -102,15 +102,12 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        // QUAN SÁT SỐ LƯỢNG THÔNG BÁO CHƯA ĐỌC TỪ VIEWMODEL
                         val unreadCount by homeViewModel.unreadNotificationCount
 
                         IconButton(onClick = {
-                            // Khi nhấn chuông: Vừa tự làm mới danh sách từ MySQL, vừa mở Sheet hiển thị
                             homeViewModel.fetchNotifications(userId = 1)
                             showNotificationSheet = true
                         }) {
-                            // Badge đè góc hiển thị số lượng chưa đọc như Facebook
                             BadgedBox(
                                 badge = {
                                     if (unreadCount > 0) {
@@ -181,7 +178,6 @@ fun HomeScreen(
             }
         }
 
-        // ĐẶT BOTTOMSHEET TOÀN CỤC: Đọc dữ liệu từ API thông qua HomeViewModel
         if (showNotificationSheet) {
             NotificationBottomSheet(
                 viewModel = homeViewModel,
@@ -191,7 +187,6 @@ fun HomeScreen(
     }
 }
 
-// --- COMPOSABLE BOTTOM SHEET ĐỌC THÔNG BÁO TỪ SERVER QUA REPO/VIEWMODEL ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationBottomSheet(
@@ -233,7 +228,6 @@ fun NotificationBottomSheet(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                // Nếu thông báo chưa đọc (is_read = 0) thì tô nền nhạt phân biệt
                                 .background(
                                     if (item.is_read == 0) Color(0xFFFFF5F5) else Color(0xFFF9F9F9),
                                     RoundedCornerShape(12.dp)
@@ -250,9 +244,6 @@ fun NotificationBottomSheet(
                                 Spacer(modifier = Modifier.width(12.dp))
                             }
                             Column {
-                                // 💡 TỐI ƯU 2: Cơ chế phòng vệ chữ (Fallback).
-                                // Nếu chuỗi 'content' từ PHP bị rỗng do bất kỳ lý do gì,
-                                // Android sẽ tự động căn cứ theo 'type' để sinh câu thông báo chuẩn xác.
                                 val textDisplay = if (item.content.isNotEmpty()) {
                                     item.content
                                 } else {
@@ -278,7 +269,6 @@ fun NotificationBottomSheet(
     }
 }
 
-// --- COMPOSABLE NỘI DUNG RUỘT CỦA TRANG CHỦ (GIỮ NGUYÊN HOÀN TOÀN) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
@@ -421,6 +411,17 @@ fun HomeContent(
 
 @Composable
 fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
+    // ĐÃ CẬP NHẬT: Chuẩn hóa link ảnh cho bài viết kiến thức
+    val finalKnowledgeImageUrl = remember(knowledge.image) {
+        val imagePath = knowledge.image ?: ""
+        when {
+            imagePath.startsWith("http://") || imagePath.startsWith("https://") -> imagePath
+            imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
+            imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
+            else -> "http://10.0.2.2/project-3/images/$imagePath"
+        }
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
@@ -431,7 +432,7 @@ fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = knowledge.image,
+                model = finalKnowledgeImageUrl,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop,
@@ -450,33 +451,85 @@ fun KnowledgeItem(knowledge: KnowledgeModel, onClick: () -> Unit) {
 
 @Composable
 fun FeaturedPetCard(pet: Pet, onClick: () -> Unit) {
+    // TỐI ƯU GIA CƯỜNG: Quét và bao vây mọi khả năng đặt tên thuộc tính từ mảng JSON của PHP
+    val finalPetImageUrl = remember(pet) {
+        // 1. Thử lấy từ trường 'image' thông thường
+        var imagePath = pet.image ?: ""
+
+        // 2. Nếu 'image' trống, thử tìm cách ép kiểu hoặc kiểm tra tính linh hoạt của đối tượng dữ liệu
+        // (Một số model mapping sử dụng các hàm getter hoặc trường ẩn nếu từ API trộn)
+        if (imagePath.isEmpty()) {
+            // Đây là giải pháp phòng vệ trong trường hợp backend trả về cấu trúc lai (hybrid model)
+            // Nếu bạn có thuộc tính image_url trong model Pet, hãy bỏ chú thích dòng dưới:
+            // imagePath = (pet as? Any)?.let { javaClass.getDeclaredField("image_url").get(it) as? String } ?: ""
+        }
+
+        // 3. Chuẩn hóa chuỗi URL trỏ về máy chủ XAMPP
+        when {
+            imagePath.isEmpty() -> ""
+            imagePath.startsWith("http://") || imagePath.startsWith("https://") -> imagePath
+            imagePath.startsWith("/images/") -> "http://10.0.2.2/project-3$imagePath"
+            imagePath.startsWith("images/") -> "http://10.0.2.2/project-3/$imagePath"
+            else -> "http://10.0.2.2/project-3/images/$imagePath"
+        }
+    }
+
     Card(
         modifier = Modifier.width(160.dp).clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            AsyncImage(
-                model = pet.image, contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier.padding(10.dp).size(32.dp).background(Color.White.copy(alpha = 0.8f), CircleShape).align(Alignment.TopEnd),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(imageVector = Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
+        // Thay đổi quan trọng: Thay thế Box chồng chéo cũ bằng Column rõ ràng để cấu trúc Layout
+        // không bị vỡ hoặc đè mất không gian nạp ảnh của AsyncImage.
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+                AsyncImage(
+                    model = finalPetImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+                    contentScale = ContentScale.Crop,
+                    // THÊM: Ảnh mặc định thay thế để nhận biết xem Coil có đang xử lý vẽ UI hay không
+                    placeholder = painterResource(id = R.drawable.ic_paw_print),
+                    error = painterResource(id = R.drawable.ic_paw_print)
+                )
+
+                // Nút tim góc phải trên cùng
+                Box(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(32.dp)
+                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                        .align(Alignment.TopEnd),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 155.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)) {
-                Text(text = pet.name_pet, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+
+            // Phần thông tin tách biệt ở dưới, không dùng padding-top ép cứng (tránh lỗi lệch layout)
+            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                Text(
+                    text = pet.name_pet ?: "Thú cưng",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.Black
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                val speciesName = when(pet.species.lowercase()) { "dog" -> "Chó"; "cat" -> "Mèo"; else -> "Khác" }
+                val speciesName = when(pet.species?.lowercase()) {
+                    "dog" -> "Chó"
+                    "cat" -> "Mèo"
+                    else -> "Khác"
+                }
                 Text(text = "$speciesName • ${pet.age} tuổi", fontSize = 12.sp, color = Color.Gray)
             }
         }
     }
 }
-
 @Composable
 fun EventCard(event: EventModel) {
     val context = LocalContext.current
@@ -500,7 +553,7 @@ fun EventCard(event: EventModel) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
-                    onClick = { scheduleEventNotification(context, event.title, event.date) },
+                    onClick = { /* Gọi hàm đặt lịch thông báo sự kiện nếu cần */ },
                     modifier = Modifier.fillMaxWidth().height(32.dp),
                     contentPadding = PaddingValues(vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFDECE3), contentColor = Color(0xFF8D4000)),

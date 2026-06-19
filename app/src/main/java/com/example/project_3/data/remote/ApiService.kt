@@ -265,11 +265,11 @@ interface ApiService {
         @Query("user_id") userId: Int
     ): com.example.project_3.data.model.NotificationResponse
 
+    // Sửa đổi dòng này trong ApiService.kt của bạn:
     @POST("insert_adoption.php")
     suspend fun registerAdoption(
-        @Body request: AdoptionRequest
+        @Body request: Any // <-- Đổi từ AdoptionRequest sang Any để nhận được mọi cấu trúc JSON động
     ): AdoptionResponse
-    //adoption
     // Gọi đến api số 1
     @GET("adoption/get_all_requests.php")
     suspend fun getAllRequests(): AdoptionResponse
