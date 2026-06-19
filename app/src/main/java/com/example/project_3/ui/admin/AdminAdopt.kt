@@ -1,7 +1,9 @@
 package com.example.project_3.ui.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.compose.SubcomposeAsyncImage
+import com.example.project_3.data.local.SessionManager // THÊM IMPORT
 import com.example.project_3.viewmodel.AdminAdoptViewModel
 
 private object AdminAdoptColors {
@@ -48,7 +54,19 @@ fun AdminAdopt(
     navController: NavController,
     viewModel: AdminAdoptViewModel = viewModel()
 ) {
+    // 1. THAY ĐỔI: Khởi tạo SessionManager để lấy thông tin Admin hiện tại giống AdminManagePet
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val currentAdmin = remember { sessionManager.getUser() }
+
     val uiState by viewModel.uiState.collectAsState()
+
+    // Tự động làm mới dữ liệu mỗi khi màn hình hiển thị
+    LaunchedEffect(Unit) {
+        viewModel.fetchAdoptionRequests()
+    }
+
+    val defaultAvatarUrl = "${BASE_SERVER_URL}images/avarta_mac_dinh.jpg"
 
     Scaffold(
         containerColor = AdminAdoptColors.BackgroundColor,
@@ -63,11 +81,47 @@ fun AdminAdopt(
                     )
                 },
                 actions = {
-                    IconButton(onClick = { /* Xử lý thông báo nếu cần */ }) {
+                    IconButton(onClick = { /* Xử lý thông báo */ }) {
                         Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = AdminAdoptColors.OnSurfaceVariant)
                     }
-                    Box(modifier = Modifier.padding(end = 16.dp).size(32.dp).clip(CircleShape).background(Color.LightGray)) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = "Admin Profile", modifier = Modifier.fillMaxSize())
+
+                    // 2. THAY ĐỔI: Sửa lại logic clickable giống hệt bên AdminManagePet
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray)
+                            .clickable {
+                                val adminIdStr = currentAdmin?.id_user?.toString() ?: ""
+
+                                if (adminIdStr.isNotEmpty()) {
+                                    // Chuyển sang màn hình admin_profile kèm theo ID của admin giống AdminManagePet
+                                    navController.navigate("admin_profile/$adminIdStr") {
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Không tìm thấy thông tin phiên đăng nhập của Admin", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SubcomposeAsyncImage(
+                            model = defaultAvatarUrl,
+                            contentDescription = "Admin Default Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                CircularProgressIndicator(
+                                    color = AdminAdoptColors.OrangePrimary,
+                                    strokeWidth = 1.5.dp,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            error = {
+                                Icon(Icons.Default.AccountCircle, contentDescription = "Admin Profile", modifier = Modifier.fillMaxSize(), tint = AdminAdoptColors.OnSurfaceVariant)
+                            }
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AdminAdoptColors.BackgroundColor)
@@ -81,7 +135,7 @@ fun AdminAdopt(
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
                     Triple("Apps", "admin_adopt", Icons.Default.Menu),
                     Triple("Social", "admin_social", Icons.Default.Share),
-                    Triple("Users", "admin_manage_user", Icons.Default.People) // Thêm ở đây
+                    Triple("Users", "admin_manage_user", Icons.Default.People)
                 )
                 items.forEach { (title, route, icon) ->
                     NavigationBarItem(
@@ -110,7 +164,6 @@ fun AdminAdopt(
         },
         floatingActionButton = {
             FloatingActionButton(
-                // CẬP NHẬT: Đổi từ loadAdoptApplications() sang hàm fetchAdoptionRequests() chuẩn
                 onClick = { viewModel.fetchAdoptionRequests() },
                 containerColor = AdminAdoptColors.OrangePrimary,
                 contentColor = Color.White,
@@ -157,7 +210,6 @@ fun AdminAdopt(
                 }
             }
 
-            // XỬ LÝ HIỂN THỊ LOADING TRỰC QUAN
             if (uiState.isLoading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -166,13 +218,11 @@ fun AdminAdopt(
                 }
             }
 
-            // XỬ LÝ HIỂN THỊ LỖI KÈM NÚT THỬ LẠI
             if (uiState.errorMessage != null) {
                 item {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = uiState.errorMessage!!, color = AdminAdoptColors.ErrorColor, fontSize = 14.sp, textAlign = TextAlign.Center)
                         Spacer(modifier = Modifier.height(8.dp))
-                        // CẬP NHẬT: Sửa hàm tải lại dữ liệu thích hợp
                         Button(onClick = { viewModel.fetchAdoptionRequests() }, colors = ButtonDefaults.buttonColors(containerColor = AdminAdoptColors.OrangePrimary)) {
                             Text("Thử tải lại dữ liệu")
                         }
@@ -180,21 +230,19 @@ fun AdminAdopt(
                 }
             }
 
-            // ĐỔ DANH SÁCH DỮ LIỆU THẬT
             items(uiState.applications, key = { it.id }) { application ->
                 ApplicationCard(
-                    name = application.applicantName, // CẬP NHẬT: Sửa biến tham chiếu chuẩn cho trường tên người gửi
+                    name = application.applicantName,
                     petName = application.petName,
                     petBreed = application.petBreed,
                     status = application.status,
                     tags = application.tags,
                     note = application.note,
                     actions = {
-                        // TỐI ƯU LOGIC HIỂN THỊ NÚT: Chỉ hiện nút thao tác khi trạng thái là pending
                         if (application.status.lowercase() == "pending") {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Button(
-                                    onClick = { viewModel.rejectApplication(application.id) }, // Truyền kiểu dữ liệu số Int chuẩn
+                                    onClick = { viewModel.rejectApplication(application.id) },
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.buttonColors(containerColor = AdminAdoptColors.SurfaceContainerLow),
                                     shape = RoundedCornerShape(12.dp)
@@ -215,11 +263,10 @@ fun AdminAdopt(
                                 }
                             }
                         } else {
-                            // Gợi ý trạng thái đơn trực quan khi đã được xử lý xong
-                            val statusText = when (application.status.lowercase()) {
-                                "approved", "adopted" -> "Đơn yêu cầu này đã được phê duyệt thành công"
-                                "rejected" -> "Đơn yêu cầu này đã bị từ chối"
-                                else -> "Đơn đã xử lý: ${application.status}"
+                            val statusText = if (application.status.lowercase() == "approved" || application.status.lowercase() == "adopted") {
+                                "Đơn yêu cầu này đã được phê duyệt thành công"
+                            } else {
+                                "Đơn yêu cầu này đã bị từ chối"
                             }
                             val statusTextColor = if (application.status.lowercase() == "rejected") AdminAdoptColors.ErrorColor else AdminAdoptColors.SuccessColor
 
@@ -271,7 +318,6 @@ fun ApplicationCard(
     note: String?,
     actions: @Composable () -> Unit
 ) {
-    // Đổi màu sắc của Badge trạng thái tùy chỉnh theo chuỗi string trả về
     val badgeBgColor = when (status.lowercase()) {
         "pending" -> AdminAdoptColors.OrangePrimary.copy(alpha = 0.15f)
         "approved", "adopted" -> AdminAdoptColors.SuccessColor.copy(alpha = 0.15f)

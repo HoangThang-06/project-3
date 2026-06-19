@@ -50,7 +50,7 @@ fun AdminManagePet(
     navController: NavController,
     viewModel: AdminManagePetViewModel = viewModel()
 ) {
-    // 1. Khởi tạo SessionManager và lấy dữ liệu Admin đã lưu từ phiên đăng nhập trước đó
+    // 1. Khởi tạo SessionManager và lấy dữ liệu Admin
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val currentAdmin = remember { sessionManager.getUser() }
@@ -60,6 +60,14 @@ fun AdminManagePet(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatusFilter by remember { mutableStateOf("All") }
+
+    // TỰ ĐỘNG CẬP NHẬT: Gọi fetchPets() mỗi khi màn hình này được mở hoặc quay lại
+    LaunchedEffect(Unit) {
+        viewModel.fetchPets()
+    }
+
+    // Đường dẫn ảnh đại diện mặc định lấy từ server XAMPP của bạn
+    val defaultAvatarUrl = "${BASE_SERVER_URL}images/avarta_mac_dinh.jpg"
 
     Scaffold(
         containerColor = BackgroundColor,
@@ -72,17 +80,16 @@ fun AdminManagePet(
                         Icon(Icons.Default.Notifications, contentDescription = null, tint = OnSurfaceVariant)
                     }
 
-                    // 2. CẬP NHẬT: Nhấn vào Box ảnh đại diện để lấy ID thực tế và chuyển sang tab Admin Profile
+                    // 2. CẬP NHẬT: Hiển thị ảnh mặc định từ server thay cho Icon cũ
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(36.dp) // Tăng nhẹ kích thước để ảnh hiển thị rõ nét hơn
                             .background(PrimaryFixed, CircleShape)
                             .clip(CircleShape)
                             .clickable {
                                 val adminIdStr = currentAdmin?.id_user?.toString() ?: ""
 
                                 if (adminIdStr.isNotEmpty()) {
-                                    // Chuyển hướng khớp với cấu hình route: "admin_profile/{adminId}"
                                     navController.navigate("admin_profile/$adminIdStr") {
                                         launchSingleTop = true
                                     }
@@ -92,7 +99,23 @@ fun AdminManagePet(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryColor)
+                        SubcomposeAsyncImage(
+                            model = defaultAvatarUrl,
+                            contentDescription = "Admin Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                CircularProgressIndicator(
+                                    color = PrimaryColor,
+                                    strokeWidth = 1.5.dp,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            error = {
+                                // Nếu server lỗi hoặc không tìm thấy file, tự động quay về Icon mặc định phòng hờ
+                                Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryColor)
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                 }
@@ -105,7 +128,6 @@ fun AdminManagePet(
                 containerColor = SurfaceContainerLowest,
                 tonalElevation = 8.dp
             ) {
-                // Sử dụng Triple (Tên hiển thị, Route, Biểu tượng)
                 val items = listOf(
                     Triple("Dash", "admin_home", Icons.Default.Home),
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
@@ -128,7 +150,7 @@ fun AdminManagePet(
                         },
                         icon = {
                             Icon(
-                                imageVector = icon, // compiler tự hiểu icon là ImageVector từ Triple
+                                imageVector = icon,
                                 contentDescription = title
                             )
                         },

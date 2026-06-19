@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.SubcomposeAsyncImage
+import com.example.project_3.data.local.SessionManager
 import com.example.project_3.data.model.Article
 import com.example.project_3.viewmodel.AdminManageArticleViewModel
 
-// Định nghĩa màu sắc Token UI đồng bộ hệ thống Admin
 val AdminSecondaryColor = Color(0xFF006A65)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,11 +43,18 @@ fun AdminSocial(
     onAddArticleClick: () -> Unit
 ) {
     val context = LocalContext.current
+
+    val sessionManager = remember { SessionManager(context) }
+    val currentAdmin = remember { sessionManager.getUser() }
+
     val articles = viewModel.uiState.collectAsState().value.articles
     val isLoading = viewModel.uiState.collectAsState().value.isLoading
     val messageNotification by viewModel.messageNotification
 
     var selectedFilter by remember { mutableStateOf("Tất cả") }
+
+    // Ảnh đại diện mặc định cho Admin
+    val defaultAvatarUrl = "$BASE_SERVER_URL/images/avarta_mac_dinh.jpg"
 
     LaunchedEffect(messageNotification) {
         messageNotification?.let {
@@ -71,9 +78,43 @@ fun AdminSocial(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor),
                 title = { Text("Paws & Hearts Admin", color = PrimaryColor, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { }) { Icon(Icons.Default.Notifications, contentDescription = null, tint = OnSurfaceVariant) }
-                    Box(modifier = Modifier.size(32.dp).background(PrimaryFixed, CircleShape).clip(CircleShape), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryColor)
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Default.Notifications, contentDescription = null, tint = OnSurfaceVariant)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(PrimaryFixed, CircleShape)
+                            .clip(CircleShape)
+                            .clickable {
+                                val adminIdStr = currentAdmin?.id_user?.toString() ?: ""
+                                if (adminIdStr.isNotEmpty()) {
+                                    navController.navigate("admin_profile/$adminIdStr") {
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Không tìm thấy thông tin phiên đăng nhập của Admin", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SubcomposeAsyncImage(
+                            model = defaultAvatarUrl,
+                            contentDescription = "Admin Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                CircularProgressIndicator(
+                                    color = PrimaryColor,
+                                    strokeWidth = 1.5.dp,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            error = {
+                                Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryColor)
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                 }
@@ -87,7 +128,7 @@ fun AdminSocial(
                     Triple("Pets", "admin_manage_pet", Icons.Default.Pets),
                     Triple("Apps", "admin_adopt", Icons.Default.Menu),
                     Triple("Social", "admin_social", Icons.Default.Share),
-                    Triple("Users", "admin_manage_user", Icons.Default.People) // Thêm ở đây
+                    Triple("Users", "admin_manage_user", Icons.Default.People)
                 )
                 items.forEach { (title, route, icon) ->
                     NavigationBarItem(
@@ -195,7 +236,6 @@ fun AdminSocial(
                                 onEditArticleClick(article)
                             },
                             onToggleStatus = {
-                                // ĐÃ SỬA: Gọi đúng hàm updateArticleStatus với 2 tham số khớp với ViewModel của bạn
                                 viewModel.updateArticleStatus(article.id_article, article.status)
                             },
                             onDelete = {
@@ -231,10 +271,27 @@ fun ArticleRowCard(
 ) {
     val isPrivate = article.status == "private"
 
-    val fullImageUrl = if (article.image.startsWith("images/") || article.image.startsWith("http")) {
-        article.image
-    } else {
-        "${BASE_SERVER_URL}images/${article.image}"
+    // 🛠️ ĐÃ CẬP NHẬT: Xử lý chuẩn hóa chuỗi để tương thích hoàn toàn dữ liệu có dấu "/" ở đầu
+    val fullImageUrl = when {
+        article.image.startsWith("http") -> article.image
+
+        // Trường hợp: /uploads/articles/... hoặc uploads/articles/...
+        article.image.contains("uploads/articles/") -> {
+            val cleanPath = if (article.image.startsWith("/")) article.image.substring(1) else article.image
+            "$BASE_SERVER_URL/$cleanPath"
+        }
+
+        // Trường hợp: Dữ liệu cũ dạng /images/... hoặc images/...
+        article.image.contains("images/") -> {
+            val cleanPath = if (article.image.startsWith("/")) article.image.substring(1) else article.image
+            "$BASE_SERVER_URL/${cleanPath.replace("images/", "uploads/articles/")}"
+        }
+
+        // Trường hợp: Chỉ có tên file ảnh nguyên bản (Ví dụ: "1781849137_6a34dc3145fc1.png")
+        else -> {
+            val cleanName = article.image.removePrefix("/")
+            "$BASE_SERVER_URL/uploads/articles/$cleanName"
+        }
     }
 
     Row(

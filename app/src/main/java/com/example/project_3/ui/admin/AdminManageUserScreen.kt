@@ -74,6 +74,11 @@ fun AdminManageUserScreen(
     var showEditBottomSheet by remember { mutableStateOf(false) }
     var selectedUserForEdit by remember { mutableStateOf<User?>(null) }
 
+    // Đường dẫn ảnh đại diện mặc định của hệ thống Admin
+    val defaultAvatarUrl = "http://10.0.2.2/project-3/images/avarta_mac_dinh.jpg"
+    // Lấy ra ID người dùng đang active từ logic cũ để truyền sang tab khác
+    val activeAdminId = if (currentUserId.isNotEmpty()) currentUserId else savedUserId.toString()
+
     // Đồng bộ luồng nạp dữ liệu ban đầu
     LaunchedEffect(currentUserId, savedUserId) {
         if (currentUserId.isNotEmpty()) {
@@ -107,16 +112,27 @@ fun AdminManageUserScreen(
                     }
                 },
                 actions = {
+                    // 🛠️ CHỈ SỬA KHỐI NÀY: Thay đổi đường dẫn ảnh mặc định và xử lý sự kiện click chuyển sang tab admin_profile
                     Box(
                         modifier = Modifier
                             .padding(end = 16.dp)
                             .size(36.dp)
                             .clip(CircleShape)
-                            .border(2.dp, AdminPortalColors.PrimaryFixedDim(), CircleShape)
+                            .background(AdminPortalColors.SurfaceContainerHigh)
+                            .clickable {
+                                if (activeAdminId.isNotEmpty() && activeAdminId != "-1") {
+                                    // Điều hướng sang màn hình Profile của Admin theo ID tương tự AdminManagePet
+                                    navController.navigate("admin_profile/$activeAdminId") {
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Không xác định được phiên đăng nhập!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                     ) {
                         Image(
-                            painter = rememberAsyncImagePainter("https://lh3.googleusercontent.com/aida-public/AB6AXuBpHzjIiDFtD0gzJxwQopAOg8WVQEo0x7ZkN1gKXGaWnhtNFH7nB5tGV1S0jjP_2Ne0AsQyvDVOWoPldm3RdQYn-xCoWJXye7KH6Sm8FEHgRHf_qjS-Vn4YT7AD3obVYbRuv7jl5OtHfzRcfNLgThwhF6Ft6WSFQoB7qc3cUbPTuU7mzz0876HnrJhevZswcNip2RTKYAyX_ZBOzU8EDKlOrjp7sY77NO7S2xQMR-_NCjOLTIZXTwr6wizoBwdHT2AujgIrNR9JbX8"),
-                            contentDescription = "Admin Avatar",
+                            painter = rememberAsyncImagePainter(model = defaultAvatarUrl),
+                            contentDescription = "Admin Avatar Mặc Định",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -339,12 +355,10 @@ fun AdminManageUserScreen(
                         AdminUserRowItem(
                             user = user,
                             onEditClick = {
-                                // Gán thực thể được chọn và kích hoạt Bottom Sheet sửa đổi thông tin
                                 selectedUserForEdit = user
                                 showEditBottomSheet = true
                             },
                             onDeleteClick = {
-                                val activeAdminId = if (currentUserId.isNotEmpty()) currentUserId else savedUserId.toString()
                                 viewModel.deleteUser(user.id_user.toString(), activeAdminId)
                             }
                         )
@@ -354,10 +368,7 @@ fun AdminManageUserScreen(
         }
     }
 
-    // HIỂN THỊ MODAL BOTTOM SHEET SỬA ĐỔI PROFILE NGƯỜI DÙNG
     if (showEditBottomSheet && selectedUserForEdit != null) {
-        val activeAdminId = if (currentUserId.isNotEmpty()) currentUserId else savedUserId.toString()
-
         EditUserBottomSheet(
             user = selectedUserForEdit!!,
             onDismiss = {
@@ -365,7 +376,6 @@ fun AdminManageUserScreen(
                 selectedUserForEdit = null
             },
             onConfirmUpdate = { fullname, phone, birthday, gender, address, email ->
-                // Gọi hàm updateUserProfile kết nối đến updateAdminProfile của Repository
                 viewModel.updateUserProfile(
                     idUser = selectedUserForEdit!!.id_user,
                     fullname = fullname,
@@ -383,6 +393,7 @@ fun AdminManageUserScreen(
         )
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditUserBottomSheet(
@@ -392,7 +403,6 @@ fun EditUserBottomSheet(
 ) {
     val context = LocalContext.current
 
-    // Khởi tạo các State giữ dữ liệu nhập từ Form điền thông tin người dùng
     var fullname by remember { mutableStateOf(user.fullname ?: "") }
     var phone by remember { mutableStateOf(user.phone ?: "") }
     var birthday by remember { mutableStateOf(user.birthday ?: "") }
@@ -402,7 +412,6 @@ fun EditUserBottomSheet(
 
     val genderOptions = listOf("Nam", "Nu")
 
-    // Cấu hình Dialog chọn Ngày sinh (DatePicker)
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
         context,
@@ -416,7 +425,6 @@ fun EditUserBottomSheet(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    // Khởi tạo trạng thái cuộn cho form nhập liệu
     val scrollState = rememberScrollState()
 
     ModalBottomSheet(
@@ -452,7 +460,6 @@ fun EditUserBottomSheet(
 
             HorizontalDivider(color = AdminPortalColors.SurfaceContainerHigh)
 
-            // Trường nhập: Họ và tên
             OutlinedTextField(
                 value = fullname,
                 onValueChange = { fullname = it },
@@ -462,7 +469,6 @@ fun EditUserBottomSheet(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AdminPortalColors.Primary)
             )
 
-            // Trường nhập: Email liên lạc
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -472,7 +478,6 @@ fun EditUserBottomSheet(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AdminPortalColors.Primary)
             )
 
-            // Trường nhập: Số điện thoại
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
@@ -482,7 +487,6 @@ fun EditUserBottomSheet(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AdminPortalColors.Primary)
             )
 
-            // SỬA ĐỔI CHÍNH: Clickable trực tiếp trên OutlinedTextField kết hợp xử lý tương tác
             OutlinedTextField(
                 value = birthday,
                 onValueChange = {},
@@ -490,13 +494,12 @@ fun EditUserBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(
-                        // Khởi tạo nguồn tương tác ảo để cô lập hành vi nhấn chuột
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null // Tắt hiệu ứng gợn sóng mặc định nếu muốn mượt mà hơn
+                        indication = null
                     ) {
                         datePickerDialog.show()
                     },
-                enabled = false, // Chuyển thành false để tắt hẳn tiêu điểm bàn phím (Focus)
+                enabled = false,
                 readOnly = true,
                 trailingIcon = {
                     Icon(
@@ -506,7 +509,6 @@ fun EditUserBottomSheet(
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    // Định cấu hình màu sắc khi disable khớp hoàn toàn với trạng thái bình thường để UI không bị mờ xám
                     disabledTextColor = AdminPortalColors.OnSurface,
                     disabledLabelColor = AdminPortalColors.OnSurfaceVariant,
                     disabledBorderColor = Color.Gray,
@@ -514,7 +516,6 @@ fun EditUserBottomSheet(
                 )
             )
 
-            // Khối chọn: Giới tính (Nam / Nữ) dạng RadioButton mềm mại
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = "Giới tính", fontSize = 14.sp, color = AdminPortalColors.OnSurfaceVariant, fontWeight = FontWeight.Medium)
                 Row(
@@ -549,7 +550,6 @@ fun EditUserBottomSheet(
                 }
             }
 
-            // Trường nhập: Địa chỉ thường trú
             OutlinedTextField(
                 value = address,
                 onValueChange = { address = it },
@@ -561,7 +561,6 @@ fun EditUserBottomSheet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Bộ đôi nút nhấn Xác nhận / Hủy thao tác chỉnh sửa
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -593,6 +592,7 @@ fun EditUserBottomSheet(
         }
     }
 }
+
 @Composable
 fun AdminUserRowItem(
     user: User,
@@ -669,6 +669,7 @@ fun AdminUserRowItem(
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))
+
                 Text(
                     text = user.email,
                     fontSize = 13.sp,
@@ -676,44 +677,34 @@ fun AdminUserRowItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                // Hiển thị bổ sung số bài viết đăng và lượt nhận nuôi nếu có dữ liệu thật
-                if (user.post_count > 0 || user.adopt_count > 0) {
-                    Text(
-                        text = "Bài viết: ${user.post_count} • Nhận nuôi: ${user.adopt_count}",
-                        fontSize = 11.sp,
-                        color = AdminPortalColors.Primary.copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(36.dp)
                         .background(AdminPortalColors.SurfaceContainerLow, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = "Sửa",
                         tint = AdminPortalColors.Primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
+
                 IconButton(
                     onClick = onDeleteClick,
                     modifier = Modifier
-                        .size(38.dp)
-                        .background(AdminPortalColors.ErrorContainer.copy(alpha = 0.6f), CircleShape)
+                        .size(36.dp)
+                        .background(AdminPortalColors.ErrorContainer.copy(alpha = 0.8f), CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = "Xóa",
                         tint = AdminPortalColors.Error,
                         modifier = Modifier.size(18.dp)
                     )
@@ -722,5 +713,3 @@ fun AdminUserRowItem(
         }
     }
 }
-
-private fun AdminPortalColors.PrimaryFixedDim() = Color(0xFFFFB68D)
